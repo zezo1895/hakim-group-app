@@ -1,20 +1,190 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { View, Text, Pressable, I18nManager, Alert, Linking } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import * as FileSystem from 'expo-file-system';
+import Constants from 'expo-constants';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+import HomeScreen from './src/screens/HomeScreen';
+import ProductDetailScreen from './src/screens/ProductDetailScreen';
+import AdminScreen from './src/screens/AdminScreen';
+import SyncProgressComponent from './src/components/SyncProgress';
+import { syncService } from './src/services/syncService';
+import { imageCache } from './src/services/imageCache';
+import { api } from './src/api/client';
+import { COLORS, SPACING, RADIUS, FONT_SIZES } from './src/theme';
+
+// Force RTL
+I18nManager.forceRTL(true);
+I18nManager.allowRTL(true);
+
+// Catch fatal errors and show them on screen instead of crashing
+if (!__DEV__) {
+  const globalHandler = ErrorUtils.getGlobalHandler();
+  ErrorUtils.setGlobalHandler((error, isFatal) => {
+    Alert.alert('حدث خطأ', String(error) + '\n\n' + (error.stack || ''));
+    if (globalHandler) {
+      globalHandler(error, isFatal);
+    }
+  });
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+const Stack = createNativeStackNavigator();
+
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+export default function App() {
+  const [isReady, setIsReady] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState({ progress: 0, message: '', stage: 'data' });
+  const [updateRequired, setUpdateRequired] = useState(false);
+  const [updateUrl, setUpdateUrl] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+
+  const handleDownloadAndInstall = async () => {
+    try {
+      setIsDownloading(true);
+
+      // Convert Google Drive link to direct download if necessary
+      let finalUrl = updateUrl;
+      const driveMatch = updateUrl.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+      if (driveMatch && driveMatch[1]) {
+        finalUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+      }
+
+      // Open the browser to download the file directly, safest way without extra permissions
+      await Linking.openURL(finalUrl);
+      
+    } catch (error) {
+      console.log('Download error:', error);
+      Alert.alert('خطأ', 'فشل في فتح الرابط.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  useEffect(() => {
+    prepare();
+  }, []);
+
+  async function prepare() {
+    try {
+      if (imageCache && imageCache.init) {
+        await imageCache.init();
+      }
+      
+      // Check for mandatory app update first
+      try {
+        if (api && api.checkAppVersion) {
+          const versionData = await api.checkAppVersion();
+          const currentNativeVersion = Constants.expoConfig?.version || '1.0.0';
+          
+          if (versionData && versionData.latestVersion && versionData.latestVersion !== currentNativeVersion) {
+            setUpdateUrl(versionData.downloadUrl);
+            setUpdateRequired(true);
+            try { await SplashScreen.hideAsync(); } catch (e) {}
+            return; // Block further loading
+          }
+        }
+      } catch (e) {
+        console.log('Update check failed, continuing normally', e);
+      }
+
+      let needsSync = false;
+      if (syncService && syncService.needsInitialSync) {
+        needsSync = await syncService.needsInitialSync();
+      }
+      
+      if (needsSync) {
+        setIsSyncing(true);
+        try {
+          await SplashScreen.hideAsync();
+        } catch (e) {}
+        
+        await syncService.fullSync(({ stage, current, total, message }) => {
+          setSyncProgress({
+            progress: total > 0 ? current / total : 0,
+            message,
+            stage,
+          });
+        });
+        setIsSyncing(false);
+      }
+      
+      setIsReady(true);
+      try {
+        await SplashScreen.hideAsync();
+      } catch (e) {}
+    } catch (e) {
+      console.error('Prepare error:', e);
+      setIsReady(true);
+      try {
+        await SplashScreen.hideAsync();
+      } catch (err) {}
+    }
+  }
+
+  if (isSyncing) {
+    return (
+      <SafeAreaProvider>
+        <SyncProgressComponent {...syncProgress} />
+      </SafeAreaProvider>
+    );
+  }
+
+  if (updateRequired) {
+    return (
+      <SafeAreaProvider>
+        <View style={{ flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl }}>
+          <Pressable 
+            onLongPress={() => setUpdateRequired(false)} 
+            delayLongPress={3000}
+            style={{ width: 100, height: 100, backgroundColor: '#E8F5E9', borderRadius: RADIUS.full, justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.xl }}
+          >
+            <Text style={{ fontSize: 40 }}>🚀</Text>
+          </Pressable>
+          <Text style={{ fontSize: FONT_SIZES.title, fontWeight: 'bold', color: COLORS.primary, marginBottom: SPACING.md, textAlign: 'center' }}>تحديث إجباري</Text>
+          <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: SPACING.xxl, textAlign: 'center', lineHeight: 24 }}>
+            تم إطلاق نسخة جديدة من التطبيق. يرجى التحديث الآن لضمان عمل التطبيق بأفضل شكل واستمرار مزامنة البيانات.
+          </Text>
+          <View style={{ width: '100%', overflow: 'hidden', borderRadius: RADIUS.md }}>
+            {isDownloading ? (
+              <View style={{ backgroundColor: COLORS.surfaceAlt, paddingVertical: SPACING.md, alignItems: 'center' }}>
+                <Text style={{ color: COLORS.text, fontSize: FONT_SIZES.md, marginBottom: SPACING.sm, fontWeight: 'bold' }}>
+                  جاري التحميل... {Math.round(downloadProgress * 100)}%
+                </Text>
+                <View style={{ width: '90%', height: 6, backgroundColor: COLORS.border, borderRadius: RADIUS.full, overflow: 'hidden' }}>
+                  <View style={{ width: `${downloadProgress * 100}%`, height: '100%', backgroundColor: COLORS.primary }} />
+                </View>
+              </View>
+            ) : (
+              <Pressable onPress={handleDownloadAndInstall} style={{ backgroundColor: COLORS.primary, paddingVertical: SPACING.md, alignItems: 'center' }}>
+                <Text style={{ color: '#FFF', fontSize: FONT_SIZES.lg, fontWeight: 'bold' }}>تحديث وتثبيت الآن</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
+  if (!isReady) return null;
+
+  return (
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar style="dark" backgroundColor="#FFFFFF" />
+        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_left' }}>
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+          <Stack.Screen name="Admin" component={AdminScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
+  );
+}
