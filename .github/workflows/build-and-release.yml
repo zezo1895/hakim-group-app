@@ -46,6 +46,9 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build APK locally via EAS
+        env:
+          _JAVA_OPTIONS: "-XX:MaxMetaspaceSize=1g -Xmx4g"
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=\"-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+UseG1GC\""
         run: |
           eas build --platform android --profile preview --local --non-interactive --output app-release.apk
 
