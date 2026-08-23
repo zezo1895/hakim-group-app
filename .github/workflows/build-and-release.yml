@@ -75,4 +75,5 @@ jobs:
         run: |
           curl -X POST https://hakim-production-3e6c.up.railway.app/api/app-version/ci-update \
           -H "Content-Type: application/json" \
-          -d "{\"version\": \"${{ env.VERSION }}\", \"downloadUrl\": \"${{ env.DOWNLOAD_URL }}\", \"secret\": \"hakim_ci_secret_2024_secure\"}"
+          -H "x-ci-secret: hakim_ci_super_secret_999" \
+          -d "{\"version\": \"${{ env.VERSION }}\", \"downloadUrl\": \"${{ env.DOWNLOAD_URL }}\"}"
