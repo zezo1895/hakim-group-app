@@ -88,22 +88,13 @@ export default function App() {
       console.log('Download error:', error);
       // Fallback: If intent launcher fails, open in browser
       try {
-        await fetch('https://hakim-production-3e6c.up.railway.app/api/app-version/log-error', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            message: error.message || String(error), 
-            stack: error.stack || '',
-            deviceInfo: 'Android IntentLauncher Error'
-          })
-        });
-      } catch (logErr) {}
-
-      try {
         await Linking.openURL(updateUrl);
-      } catch (e) {
-        Alert.alert('خطأ', 'حدث خطأ أثناء تحميل أو تثبيت التحديث.');
-      }
+      } catch (e) {}
+
+      Alert.alert(
+        'سبب منع التثبيت الداخلي', 
+        `الأندرويد منع التثبيت الداخلي والسبب التقني هو:\n\n${error.message || String(error)}\n\n(تم تحويلك للمتصفح كبديل مؤقت)`
+      );
       setIsDownloading(false);
     }
   };
