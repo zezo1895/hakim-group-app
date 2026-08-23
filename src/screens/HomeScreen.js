@@ -16,6 +16,7 @@ import FilterModal from '../components/FilterModal';
 import { useProducts } from '../hooks/useProducts';
 import { syncService } from '../services/syncService';
 import { api } from '../api/client';
+import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 export default function HomeScreen({ navigation }) {
   const { width: windowWidth } = useWindowDimensions();
@@ -110,7 +111,8 @@ export default function HomeScreen({ navigation }) {
             onPressIn={handleLogoPressIn}
             onPressOut={handleLogoPressOut}
           >
-            <Image 
+            <Animated.Image 
+              entering={ZoomIn.duration(1000).springify()}
               source={require('../../assets/app-icon.png')} 
               style={styles.logo}
               resizeMode="contain"
@@ -152,12 +154,14 @@ export default function HomeScreen({ navigation }) {
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews={true}
-            renderItem={({ item }) => (
-              <ProductCard 
-                product={item} 
-                onPress={() => handleProductPress(item)} 
-                width={cardWidth}
-              />
+            renderItem={({ item, index }) => (
+              <Animated.View entering={FadeInDown.delay(Math.min(index, 20) * 100).springify()}>
+                <ProductCard 
+                  product={item} 
+                  onPress={() => handleProductPress(item)} 
+                  width={cardWidth}
+                />
+              </Animated.View>
             )}
             refreshControl={
               <RefreshControl
