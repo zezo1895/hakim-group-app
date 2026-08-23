@@ -1,54 +1,94 @@
 import React, { useEffect, useRef, memo } from 'react';
 import { View, Text, StyleSheet, Animated, Image } from 'react-native';
-import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZES } from '../theme';
+import Svg, { Circle } from 'react-native-svg';
+import { COLORS, SPACING, FONT_SIZES } from '../theme';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const SyncProgress = memo(({ progress = 0, message = '', stage = '' }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const progressWidth = useRef(new Animated.Value(0)).current;
+  const animatedProgress = useRef(new Animated.Value(0)).current;
+  
+  // Circle configuration
+  const size = 220;
+  const strokeWidth = 8;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
-
-  useEffect(() => {
-    Animated.timing(progressWidth, {
+    Animated.timing(animatedProgress, {
       toValue: progress,
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [progress, progressWidth]);
+  }, [progress, animatedProgress]);
 
-  const widthInterpolation = progressWidth.interpolate({
+  // Interpolate the progress value to dashoffset
+  const strokeDashoffset = animatedProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
+    outputRange: [circumference, 0],
   });
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
-        <View style={styles.logoContainer}>
-          <Image 
-            source={require('../../assets/app-icon.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
-        
-        <View style={styles.progressContainer}>
-          <Animated.View style={[styles.progressFill, { width: widthInterpolation }]} />
-        </View>
+      
+      {/* Top Logo */}
+      <View style={styles.logoContainer}>
+        <Image 
+          source={require('../../assets/app-icon.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.brandNameArabic}>حكيم جروب</Text>
+      </View>
 
-        <Text style={styles.percentageText}>
-          {Math.round(progress * 100)}%
-        </Text>
+      {/* Circular Progress Area */}
+      <View style={styles.progressSection}>
+        <View style={styles.circleContainer}>
+          <Svg width={size} height={size}>
+            {/* Background Circle */}
+            <Circle
+              stroke={COLORS.border}
+              fill="none"
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              strokeWidth={strokeWidth}
+            />
+            {/* Animated Progress Circle */}
+            <AnimatedCircle
+              stroke={COLORS.primary}
+              fill="none"
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              rotation="-90"
+              originX={size / 2}
+              originY={size / 2}
+            />
+          </Svg>
+          
+          {/* Percentage Text in center of circle */}
+          <View style={styles.percentageContainer}>
+            <Text style={styles.percentageText}>
+              {Math.round(progress * 100)}%
+            </Text>
+          </View>
+        </View>
         
-        <Text style={styles.messageText}>{message || 'جاري تحميل البيانات...'}</Text>
-        {stage ? <Text style={styles.stageText}>{stage}</Text> : null}
-      </Animated.View>
+        {/* Shadow effect behind circle (optional, based on design) */}
+        <View style={styles.circleShadow} />
+      </View>
+
+      {/* Status Texts below circle */}
+      <View style={styles.textContainer}>
+        <Text style={styles.titleText}>Syncing Data Status</Text>
+        <Text style={styles.messageText}>{message || 'جاري مزامنة البيانات...'}</Text>
+      </View>
+
     </View>
   );
 });
@@ -56,59 +96,72 @@ const SyncProgress = memo(({ progress = 0, message = '', stage = '' }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
-    justifyContent: 'center',
+    backgroundColor: '#FAFCFB', // Very subtle off-white to make it less plain
+    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  contentContainer: {
-    width: '80%',
-    maxWidth: 400,
-    alignItems: 'center',
+    paddingVertical: 80,
   },
   logoContainer: {
-    width: 150,
-    height: 150,
-    marginBottom: SPACING.xl,
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    ...SHADOWS.md,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.md,
   },
   logo: {
-    width: '100%',
-    height: '100%',
+    width: 140,
+    height: 140,
+    marginBottom: 10,
   },
-  progressContainer: {
-    width: '100%',
-    height: 10,
-    backgroundColor: COLORS.border,
-    borderRadius: RADIUS.full,
-    overflow: 'hidden',
-    marginBottom: SPACING.md,
+  brandNameArabic: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.secondary, // Assuming Hakim Blue is secondary
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.full,
+  progressSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginTop: 20,
+  },
+  circleContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  percentageContainer: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   percentageText: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    marginBottom: SPACING.sm,
+    fontSize: 42,
+    fontWeight: '300', // Light font weight for elegance
+    color: COLORS.primary, // Hakim Green
+  },
+  circleShadow: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: COLORS.primary,
+    opacity: 0.1,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 30,
+    elevation: 10,
+    zIndex: 1,
+  },
+  textContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  titleText: {
+    fontSize: 24,
+    fontWeight: '500',
+    color: COLORS.text,
+    marginBottom: 10,
   },
   messageText: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.text,
-    textAlign: 'center',
-    marginBottom: SPACING.xs,
-  },
-  stageText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textLight,
-    textAlign: 'center',
+    fontSize: 18,
+    color: '#8A9A90', // Elegant grayish green
   },
 });
 

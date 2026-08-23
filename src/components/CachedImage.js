@@ -1,77 +1,46 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, memo } from 'react';
 import { View, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import { imageCache } from '../services/imageCache';
 import { COLORS, RADIUS } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 
 const CachedImage = memo(({ uri, style, resizeMode = 'cover', fallbackSource }) => {
-  const [source, setSource] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  // 1. Resolve path instantly without useEffect delay!
+  let resolvedUri = uri;
+  if (uri && !uri.startsWith('file://')) {
+    const localPath = imageCache.getLocalPath(uri);
+    if (localPath) {
+      resolvedUri = localPath;
+    }
+  }
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadImage = () => {
-      if (!uri) {
-        if (isMounted) {
-          setLoading(false);
-          setError(true);
-        }
-        return;
-      }
-
-      setLoading(true);
-      setError(false);
-
-      if (uri.startsWith('file://')) {
-        if (isMounted) {
-          setSource({ uri });
-          setLoading(false);
-        }
-        return;
-      }
-
-      const localPath = imageCache.getLocalPath(uri);
-      if (isMounted) {
-        if (localPath) {
-          setSource({ uri: localPath });
-        } else {
-          setSource({ uri });
-        }
-        // Image component's onLoad will set loading to false
-      }
-    };
-
-    loadImage();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [uri]);
+  const [loading, setLoading] = useState(!!resolvedUri);
+  const [error, setError] = useState(!resolvedUri);
 
   return (
     <View style={[styles.container, style]}>
-      {loading && (
+      {loading && !error && (
         <View style={[StyleSheet.absoluteFill, styles.loadingContainer]}>
           <ActivityIndicator color={COLORS.primary} size="small" />
         </View>
       )}
       
-      {error || (!loading && !source) ? (
+      {error || !resolvedUri ? (
         <View style={[StyleSheet.absoluteFill, styles.errorContainer]}>
           <Ionicons name="image-outline" size={24} color={COLORS.textLight} />
         </View>
       ) : (
-        source && (
-          <Image
-            source={source}
-            style={[styles.image, style]}
-            resizeMode={resizeMode}
-            onError={() => setError(true)}
-            onLoad={() => setLoading(false)}
-          />
-        )
+        <Image
+          source={{ uri: resolvedUri }}
+          style={styles.image}
+          resizeMode={resizeMode}
+          onError={() => {
+            setError(true);
+            setLoading(false);
+          }}
+          onLoad={() => setLoading(false)}
+          fadeDuration={0} // Disable fade animation for instant snap-in
+        />
       )}
     </View>
   );

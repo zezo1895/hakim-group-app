@@ -1,24 +1,17 @@
-import React, { useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  RefreshControl, 
-  Pressable, 
-  useWindowDimensions,
-  Image
-} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, useWindowDimensions, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 
-import { COLORS, SPACING, FONT_SIZES } from '../theme';
+import { COLORS, SPACING, FONT_SIZES, RADIUS, SHADOWS } from '../theme';
 import { isTablet, getProductColumns } from '../utils/responsive';
 import SearchBar from '../components/SearchBar';
 import Sidebar from '../components/Sidebar';
 import ProductCard from '../components/ProductCard';
 import SyncProgress from '../components/SyncProgress';
 import AdminPasswordModal from '../components/AdminPasswordModal';
+import FilterModal from '../components/FilterModal';
 
 import { useProducts } from '../hooks/useProducts';
 import { syncService } from '../services/syncService';
@@ -29,12 +22,16 @@ export default function HomeScreen({ navigation }) {
   const tablet = isTablet(windowWidth);
   const { 
     productTypes, 
+    materialCategories,
     filteredProducts, 
     isLoading, 
     refresh, 
     filterByCategory, 
+    setAdvancedFilters,
     searchProducts,
     activeCategory,
+    activeMaterial,
+    activeTemp,
     searchQuery
   } = useProducts();
 
@@ -42,6 +39,7 @@ export default function HomeScreen({ navigation }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ progress: 0, message: '', stage: 'data' });
   const [adminModalVisible, setAdminModalVisible] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
   
   const pressTimeoutRef = useRef(null);
 
@@ -55,7 +53,6 @@ export default function HomeScreen({ navigation }) {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await syncService.fullSync(({ stage, current, total, message }) => {
-      // Background sync, no full screen UI needed for pull-to-refresh
     });
     await refresh();
     setIsRefreshing(false);
@@ -66,49 +63,77 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleSearch = (query) => {
+    console.log(`[HomeScreen] handleSearch triggered with: "${query}"`);
     searchProducts(query);
     if (query.trim().length > 2 && api && api.logSearch) {
+      console.log(`[HomeScreen] Logging search to analytics: "${query}"`);
       api.logSearch(query).catch(() => {});
     }
   };
 
   const handleProductPress = (product) => {
-    navigation.navigate('ProductDetail', { productId: product.id, productName: product.name });
+    navigation.push('ProductDetail', {
+      productId: product.id,
+      productName: product.name,
+    });
   };
 
-  const handleAdminAccess = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setAdminModalVisible(true);
+  const handleLogoPressIn = () => {
+    pressTimeoutRef.current = setTimeout(() => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setAdminModalVisible(true);
+    }, 2000);
   };
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <Pressable onLongPress={handleAdminAccess} delayLongPress={5000} style={styles.logoContainer}>
-        <Image 
-          source={require('../../assets/app-icon.png')} // Adjust if path changes
-          style={styles.logo}
-          resizeMode="contain"
-          defaultSource={{ uri: 'https://via.placeholder.com/100x36?text=Logo' }}
-        />
-      </Pressable>
-      <View style={styles.searchContainer}>
-        <SearchBar 
-          value={searchQuery}
-          onChangeText={searchProducts}
-          onSearch={handleSearch}
-          placeholder="ابحث عن منتج أو كود..."
-        />
-      </View>
-    </View>
-  );
+  const handleLogoPressOut = () => {
+    if (pressTimeoutRef.current) {
+      clearTimeout(pressTimeoutRef.current);
+    }
+  };
 
-  if (isSyncing) {
-    return <SyncProgress {...syncProgress} />;
-  }
+  const handleAdminSuccess = () => {
+    setAdminModalVisible(false);
+    navigation.navigate('Admin');
+  };
+
+  const handleApplyFilters = (material, temp) => {
+    setAdvancedFilters(material, temp);
+  };
+
+  const hasActiveAdvancedFilters = activeMaterial !== 'all' || activeTemp !== 'all';
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {renderHeader()}
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Pressable 
+            onPressIn={handleLogoPressIn}
+            onPressOut={handleLogoPressOut}
+          >
+            <Image 
+              source={require('../../assets/app-icon.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </Pressable>
+        </View>
+        <View style={styles.searchRow}>
+          <View style={styles.searchContainer}>
+            <SearchBar 
+              value={searchQuery}
+              onSearch={handleSearch}
+              placeholder="ابحث عن منتج..."
+            />
+          </View>
+          <TouchableOpacity 
+            style={[styles.filterBtn, hasActiveAdvancedFilters && styles.filterBtnActive]} 
+            onPress={() => setFilterModalVisible(true)}
+          >
+            <Ionicons name="options-outline" size={24} color={hasActiveAdvancedFilters ? COLORS.white : COLORS.primary} />
+            {hasActiveAdvancedFilters && <View style={styles.filterDot} />}
+          </TouchableOpacity>
+        </View>
+      </View>
       <View style={[styles.mainContainer, { flexDirection: tablet ? 'row' : 'column' }]}>
         <Sidebar 
           categories={productTypes}
@@ -117,39 +142,55 @@ export default function HomeScreen({ navigation }) {
         />
         <View style={styles.listContainer}>
           <FlatList
-            key={numColumns} // Force re-render when columns change
+            key={numColumns}
             data={filteredProducts}
             keyExtractor={item => item.id.toString()}
             numColumns={numColumns}
             contentContainerStyle={styles.flatListContent}
             columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : null}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
             renderItem={({ item }) => (
               <ProductCard 
                 product={item} 
                 onPress={() => handleProductPress(item)} 
-                width={cardWidth} 
+                width={cardWidth}
               />
             )}
             refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[COLORS.primary]} />
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                colors={[COLORS.primary]}
+                tintColor={COLORS.primary}
+              />
             }
             ListEmptyComponent={
-              !isLoading && (
+              !isLoading ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>لا توجد منتجات</Text>
+                  <Text style={styles.emptyText}>لا توجد منتجات تطابق بحثك</Text>
                 </View>
-              )
+              ) : null
             }
           />
         </View>
       </View>
+      
       <AdminPasswordModal 
         visible={adminModalVisible}
         onClose={() => setAdminModalVisible(false)}
-        onSuccess={() => {
-          setAdminModalVisible(false);
-          navigation.navigate('Admin');
-        }}
+        onSuccess={handleAdminSuccess}
+      />
+
+      <FilterModal 
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        initialMaterial={activeMaterial}
+        initialTemp={activeTemp}
+        onApply={handleApplyFilters}
+        materialCategories={materialCategories}
       />
     </SafeAreaView>
   );
@@ -158,26 +199,60 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background, // Uses new off-white
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: COLORS.white,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: 'rgba(232, 239, 234, 0.8)',
+    ...SHADOWS.small,
+    elevation: 4,
+    zIndex: 10, // Ensure shadow casts over list
   },
   logoContainer: {
-    marginRight: SPACING.md,
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
   },
   logo: {
-    width: 100,
-    height: 36,
+    height: 44, // Slightly larger for premium feel
+    width: 140,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   searchContainer: {
     flex: 1,
+    marginRight: SPACING.sm,
+  },
+  filterBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.md,
+    backgroundColor: '#FAFCFB',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    ...SHADOWS.small,
+  },
+  filterBtnActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primaryDark,
+  },
+  filterDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#E02424', // Elegant red
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   mainContainer: {
     flex: 1,
@@ -187,21 +262,22 @@ const styles = StyleSheet.create({
   },
   flatListContent: {
     padding: SPACING.md,
-    paddingBottom: SPACING.xxl,
+    paddingBottom: SPACING.xxl, // Extra space at bottom
   },
   columnWrapper: {
+    justifyContent: 'flex-start',
     gap: SPACING.md,
-    marginBottom: SPACING.md,
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    padding: SPACING.xl,
     alignItems: 'center',
-    marginTop: 100,
+    justifyContent: 'center',
+    marginTop: 40,
   },
   emptyText: {
     fontSize: FONT_SIZES.lg,
     color: COLORS.textSecondary,
     textAlign: 'center',
+    fontWeight: '500',
   },
 });

@@ -1,5 +1,5 @@
 import React, { useState, memo } from 'react';
-import { View, ScrollView, StyleSheet, Dimensions, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Dimensions, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CachedImage from './CachedImage';
 import { COLORS, SPACING, RADIUS, FONT_SIZES } from '../theme';
@@ -7,7 +7,7 @@ import { isTablet } from '../utils/responsive';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const ImageCarousel = memo(({ images = [], height = 300 }) => {
+const ImageCarousel = memo(({ images = [], height = 300, onImagePress }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   
   const carouselWidth = isTablet() ? SCREEN_WIDTH * 0.6 : SCREEN_WIDTH;
@@ -38,16 +38,20 @@ const ImageCarousel = memo(({ images = [], height = 300 }) => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         contentContainerStyle={{ width: carouselWidth * images.length }}
-        inverted
       >
         {images.map((img, index) => (
-          <View key={index} style={{ width: carouselWidth, height }}>
+          <TouchableOpacity 
+            key={index} 
+            activeOpacity={0.9}
+            style={{ width: carouselWidth, height }}
+            onPress={() => onImagePress && onImagePress(img.url, index)}
+          >
             <CachedImage 
               uri={img.url} 
               style={styles.image} 
               resizeMode="contain" 
             />
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
 
@@ -77,8 +81,7 @@ const ImageCarousel = memo(({ images = [], height = 300 }) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FAFCFB',
     position: 'relative',
   },
   placeholderContainer: {
@@ -90,11 +93,10 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-    backgroundColor: COLORS.white,
   },
   indicatorContainer: {
     position: 'absolute',
-    bottom: SPACING.md,
+    bottom: SPACING.xl, // Lifted for overlap effect
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -107,14 +109,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    marginHorizontal: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(27, 122, 61, 0.2)', // Light Hakim green
+    marginHorizontal: 3,
   },
   activeDot: {
-    width: 20,
+    width: 16,
     backgroundColor: COLORS.primary,
   },
   counterContainer: {

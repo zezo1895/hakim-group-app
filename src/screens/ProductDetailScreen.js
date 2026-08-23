@@ -1,30 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
-  ActivityIndicator,
-  useWindowDimensions
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, Modal, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZES } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SPACING, RADIUS, FONT_SIZES, SHADOWS } from '../theme';
 import { isTablet } from '../utils/responsive';
 import { api } from '../api/client';
 import { syncService } from '../services/syncService';
-import ImageCarousel from '../components/ImageCarousel';
 import ProductCard from '../components/ProductCard';
+import ImageCarousel from '../components/ImageCarousel';
+import CachedImage from '../components/CachedImage';
 
 export default function ProductDetailScreen({ route, navigation }) {
   const { productId, productName } = route.params;
-  const { width: windowWidth } = useWindowDimensions();
-  const tablet = isTablet(windowWidth);
-  
+  const tablet = isTablet();
+
   const [product, setProduct] = useState(null);
   const [siblings, setSiblings] = useState([]);
   const [lids, setLids] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fullscreenImage, setFullscreenImage] = useState(null);
+  const [fullscreenIndex, setFullscreenIndex] = useState(null);
 
   useEffect(() => {
     async function fetchProductDetails() {
@@ -40,7 +35,7 @@ export default function ProductDetailScreen({ route, navigation }) {
             details = await api.getProduct(productId);
           }
         } catch (apiErr) {
-          console.log('Failed to fetch from API, trying local data', apiErr);
+          console.log('Failed to fetch API');
         }
 
         if (!details) {
@@ -48,23 +43,21 @@ export default function ProductDetailScreen({ route, navigation }) {
           if (localData && localData.products) {
             const prod = localData.products.find(p => String(p.id) === String(productId));
             if (prod) {
-              details = { data: prod };
+              details = prod;
             }
           }
         }
         
-        if (details && details.data) {
-          setProduct(details.data);
-          setSiblings(details.data.siblings || []);
-          setLids(details.data.lids || []);
+        if (details) {
+          const productData = details.data ? details.data : details;
+          setProduct(productData);
+          setSiblings(productData.siblings || []);
+          setLids(productData.lids || []);
         }
-      } catch (err) {
-        console.error('Error fetching product details:', err);
-      } finally {
+      } catch (err) {} finally {
         setIsLoading(false);
       }
     }
-
     fetchProductDetails();
   }, [productId]);
 
@@ -73,99 +66,83 @@ export default function ProductDetailScreen({ route, navigation }) {
   const renderHeader = () => (
     <View style={styles.header}>
       <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>{'<'}</Text>
+        <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
       </Pressable>
       <Text style={styles.headerTitle} numberOfLines={1}>{productName}</Text>
-      <View style={styles.backButton} />
+      <View style={styles.backButton} style={{ backgroundColor: 'transparent' }} />
     </View>
   );
 
-  const getTemperatureText = (temp) => {
+  const getTemperatureDescription = (temp) => {
+    if (temp === 'hot') return 'يستخدم للمنتجات الساخنة';
+    if (temp === 'cold') return 'يستخدم للمنتجات الباردة';
+    if (temp === 'both') return 'يستخدم للمنتجات الساخنة والباردة معاً';
+    return 'غير محدد';
+  };
+
+  const getTemperatureTitle = (temp) => {
     if (temp === 'hot') return 'ساخن';
     if (temp === 'cold') return 'بارد';
     if (temp === 'both') return 'ساخن وبارد';
-    return temp || 'غير محدد';
+    return 'غير محدد';
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        {renderHeader()}
-        <View style={styles.loadingCenter}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
+  if (isLoading) return <View style={styles.loadingCenter}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
+  if (!product) return <View style={styles.loadingCenter}><Text>بيانات غير متاحة</Text></View>;
 
-  if (!product) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        {renderHeader()}
-        <View style={styles.loadingCenter}>
-          <Text style={styles.errorText}>تعذر تحميل تفاصيل المنتج</Text>
-        </View>
-      </SafeAreaView>
-    );
+  const SCREEN_WIDTH = Dimensions.get('window').width;
+  
+  let productImages = product?.images ? [...product.images] : (product?.image_url ? [{ url: product.image_url }] : []);
+  // بناءً على طلبك: استبعاد آخر صورة من كل المنتجات إذا كان هناك أكثر من صورة
+  if (productImages.length > 1) {
+    productImages.pop();
   }
 
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <ImageCarousel images={product.images || [{ url: product.image_url }]} height={carouselHeight} />
+        <ImageCarousel 
+          images={productImages} 
+          height={carouselHeight} 
+          onImagePress={(url, index) => setFullscreenIndex(index)}
+        />
         
-        <View style={[styles.infoCard, SHADOWS.medium]}>
-          <Text style={styles.productName}>{product.name}</Text>
-          {product.code && (
-             <View style={styles.badge}>
-               <Text style={styles.badgeText}>{product.code}</Text>
-             </View>
-          )}
+        <View style={styles.contentContainer}>
+          <Text style={styles.mainTitle}>{product.name}</Text>
           
-          <View style={styles.detailsContainer}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>النوع:</Text>
-              <Text style={styles.detailValue}>{product.type_name || 'غير محدد'}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>الخامة:</Text>
-              <Text style={styles.detailValue}>{product.material_name || 'غير محدد'}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>المقاس:</Text>
-              <Text style={styles.detailValue}>{product.size || 'غير محدد'}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>الاستخدام:</Text>
-              <Text style={styles.detailValue}>{getTemperatureText(product.temperature)}</Text>
-            </View>
+          <View style={styles.sectionBlock}>
+            <Text style={styles.blockTitle}>المقاس</Text>
+            <Text style={styles.blockValue}>{product.size || 'غير محدد'}</Text>
+          </View>
+
+          <View style={styles.sectionBlock}>
+            <Text style={styles.blockTitle}>درجة الاستخدام ({getTemperatureTitle(product.temp)})</Text>
+            <Text style={styles.blockValue}>{getTemperatureDescription(product.temp)}</Text>
+          </View>
+
+          <View style={styles.sectionBlock}>
+            <Text style={styles.blockTitle}>كود المنتج</Text>
+            <Text style={styles.blockValue}>{product.code}</Text>
+          </View>
+
+          <View style={styles.sectionBlock}>
+            <Text style={styles.blockTitle}>فئة الخامة</Text>
+            <Text style={styles.blockValue}>{product.material_category || 'غير محدد'}</Text>
+          </View>
+
+          <View style={styles.sectionBlock}>
+            <Text style={styles.blockTitle}>خامة تفصيلية</Text>
+            <Text style={styles.blockValue}>{product.material_name || 'غير محدد'}</Text>
           </View>
 
           {product.notes && (
-            <View style={styles.notesContainer}>
-              <Text style={styles.notesTitle}>ملاحظات:</Text>
-              <Text style={styles.notesText}>{product.notes}</Text>
+            <View style={styles.sectionBlock}>
+              <Text style={styles.blockTitle}>ملاحظات</Text>
+              <Text style={styles.blockValue}>{product.notes}</Text>
             </View>
           )}
         </View>
-
-        {siblings.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>مقاسات أخرى</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
-              {siblings.map(item => (
-                <View key={item.id} style={styles.horizontalCard}>
-                  <ProductCard 
-                    product={item} 
-                    onPress={() => navigation.push('ProductDetail', { productId: item.id, productName: item.name })} 
-                    width={150} 
-                  />
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
 
         {lids.length > 0 && (
           <View style={styles.section}>
@@ -173,65 +150,162 @@ export default function ProductDetailScreen({ route, navigation }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
               {lids.map(item => (
                 <View key={item.id} style={styles.horizontalCard}>
-                  <ProductCard 
-                    product={item} 
-                    onPress={() => navigation.push('ProductDetail', { productId: item.id, productName: item.name })} 
-                    width={150} 
-                  />
+                  <ProductCard product={item} onPress={() => navigation.push('ProductDetail', { productId: item.id, productName: item.name })} width={200} />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {siblings.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>مقاسات أخرى</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+              {siblings.map(item => (
+                <View key={item.id} style={styles.horizontalCard}>
+                  <ProductCard product={item} onPress={() => navigation.push('ProductDetail', { productId: item.id, productName: item.name })} width={200} />
                 </View>
               ))}
             </ScrollView>
           </View>
         )}
       </ScrollView>
+      {/* Fullscreen Swiping Image Modal */}
+      <Modal visible={fullscreenIndex !== null} transparent={true} animationType="fade" onRequestClose={() => setFullscreenIndex(null)}>
+        <View style={styles.modalBackground}>
+          <SafeAreaView style={{ flex: 1 }}>
+            <TouchableOpacity style={styles.closeModalButton} onPress={() => setFullscreenIndex(null)}>
+              <Ionicons name="close" size={36} color="#FFF" />
+            </TouchableOpacity>
+            
+            {fullscreenIndex !== null && (
+              <ScrollView 
+                horizontal 
+                pagingEnabled 
+                showsHorizontalScrollIndicator={false}
+                contentOffset={{ x: fullscreenIndex * SCREEN_WIDTH, y: 0 }}
+              >
+                {productImages.map((img, idx) => (
+                  <View key={idx} style={{ width: SCREEN_WIDTH, height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                    <CachedImage uri={img.url} style={styles.fullscreenImage} resizeMode="contain" />
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </SafeAreaView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  loadingContainer: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: '#FAFCFB' },
   loadingCenter: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { fontSize: FONT_SIZES.md, color: COLORS.error },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+  
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: SPACING.md, 
+    paddingVertical: SPACING.sm, 
+    backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+    borderBottomWidth: 1, 
+    borderBottomColor: 'rgba(232, 239, 234, 0.8)',
+    ...SHADOWS.small,
+    zIndex: 10
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  backButtonText: { fontSize: 24, color: COLORS.primary, fontWeight: 'bold' },
-  headerTitle: { flex: 1, textAlign: 'center', fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: COLORS.text },
+  backButton: { 
+    width: 44, 
+    height: 44, 
+    borderRadius: 22,
+    backgroundColor: '#F0F4F2',
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  backButtonText: { fontSize: 24, color: COLORS.primary, fontWeight: '700' },
+  headerTitle: { 
+    flex: 1, 
+    textAlign: 'center', 
+    fontSize: FONT_SIZES.lg, 
+    fontWeight: '700', 
+    color: COLORS.text,
+    paddingHorizontal: SPACING.md
+  },
+  
   scrollContent: { paddingBottom: SPACING.xxl },
-  infoCard: {
-    backgroundColor: '#FFFFFF',
-    margin: SPACING.md,
-    padding: SPACING.lg,
-    borderRadius: RADIUS.lg,
+  
+  contentContainer: { 
+    padding: SPACING.xl, 
+    backgroundColor: COLORS.white, 
+    marginHorizontal: SPACING.md, 
+    marginTop: -30, // Overlap effect
+    borderRadius: RADIUS.lg, 
+    ...SHADOWS.medium,
+    borderWidth: 1,
+    borderColor: 'rgba(232, 239, 234, 0.5)',
   },
-  productName: { fontSize: FONT_SIZES.xl, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.sm, textAlign: 'right', writingDirection: 'rtl' },
-  badge: {
-    backgroundColor: COLORS.secondary,
-    alignSelf: 'flex-start',
+  mainTitle: { 
+    fontSize: 26, 
+    fontWeight: '800', 
+    color: COLORS.text, 
+    textAlign: 'right', 
+    marginBottom: SPACING.xl, 
+    lineHeight: 34
+  },
+  
+  sectionBlock: { 
+    marginBottom: SPACING.md, 
+    paddingBottom: SPACING.md, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#F0F4F2' 
+  },
+  blockTitle: { 
+    fontSize: FONT_SIZES.sm, 
+    color: COLORS.textSecondary, 
+    textAlign: 'right', 
+    marginBottom: 6, 
+    fontWeight: '500'
+  },
+  blockValue: { 
+    fontSize: FONT_SIZES.md, 
+    color: COLORS.text, 
+    fontWeight: '700', 
+    textAlign: 'right' 
+  },
+  
+  section: { 
+    marginTop: SPACING.xl 
+  },
+  sectionTitle: { 
+    fontSize: 20, 
+    fontWeight: '800', 
+    color: COLORS.text, 
+    marginHorizontal: SPACING.lg, 
+    marginBottom: SPACING.md, 
+    textAlign: 'right' 
+  },
+  horizontalScroll: { 
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.round,
-    marginBottom: SPACING.md,
+    paddingBottom: SPACING.lg, // Give room for shadows
   },
-  badgeText: { color: COLORS.primary, fontWeight: 'bold', fontSize: FONT_SIZES.sm },
-  detailsContainer: { marginTop: SPACING.md },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: SPACING.xs, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border },
-  detailLabel: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: 'bold', textAlign: 'right', writingDirection: 'rtl' },
-  detailValue: { fontSize: FONT_SIZES.md, color: COLORS.text, textAlign: 'left' },
-  notesContainer: { marginTop: SPACING.lg, padding: SPACING.md, backgroundColor: COLORS.surface, borderRadius: RADIUS.md },
-  notesTitle: { fontSize: FONT_SIZES.md, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.xs, textAlign: 'right', writingDirection: 'rtl' },
-  notesText: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, textAlign: 'right', writingDirection: 'rtl' },
-  section: { marginTop: SPACING.md },
-  sectionTitle: { fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: COLORS.text, marginHorizontal: SPACING.md, marginBottom: SPACING.sm, textAlign: 'right', writingDirection: 'rtl' },
-  horizontalScroll: { paddingHorizontal: SPACING.md },
-  horizontalCard: { marginRight: SPACING.md },
+  horizontalCard: { 
+    marginRight: SPACING.md 
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+  },
+  closeModalButton: {
+    position: 'absolute',
+    top: SPACING.xl,
+    right: SPACING.lg,
+    zIndex: 10,
+    padding: SPACING.sm,
+  },
+  fullscreenImage: {
+    width: '100%',
+    height: '100%',
+  }
 });

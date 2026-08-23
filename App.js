@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, Text, Pressable, I18nManager, Alert, Linking } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import * as FileSystem from 'expo-file-system';
+import * as IntentLauncher from 'expo-intent-launcher';
 import Constants from 'expo-constants';
 
 import HomeScreen from './src/screens/HomeScreen';
@@ -50,20 +51,42 @@ export default function App() {
     try {
       setIsDownloading(true);
 
-      // Convert Google Drive link to direct download if necessary
       let finalUrl = updateUrl;
-      const driveMatch = updateUrl.match(/drive\.google\.com\/file\/d\/([^/]+)/);
-      if (driveMatch && driveMatch[1]) {
-        finalUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+      
+      // Convert Dropbox link to direct download automatically
+      if (updateUrl.includes('dropbox.com')) {
+        finalUrl = updateUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('?dl=0', '');
       }
 
-      // Open the browser to download the file directly, safest way without extra permissions
-      await Linking.openURL(finalUrl);
+      // Download the APK to the app's cache directory
+      const fileUri = FileSystem.cacheDirectory + 'HakimApp_Update.apk';
+      const downloadResumable = FileSystem.createDownloadResumable(
+        finalUrl,
+        fileUri,
+        {},
+        (downloadProgress) => {
+          const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+          setDownloadProgress(progress);
+        }
+      );
+
+      const { uri } = await downloadResumable.downloadAsync();
+      
+      // Get a content:// URI to bypass Android's strict FileUriExposedException
+      const contentUri = await FileSystem.getContentUriAsync(uri);
+      
+      // Launch Android's Package Installer natively!
+      await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+        data: contentUri,
+        flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+        type: 'application/vnd.android.package-archive',
+      });
+      
+      setIsDownloading(false);
       
     } catch (error) {
       console.log('Download error:', error);
-      Alert.alert('خطأ', 'فشل في فتح الرابط.');
-    } finally {
+      Alert.alert('خطأ', 'حدث خطأ أثناء تحميل أو تثبيت التحديث.');
       setIsDownloading(false);
     }
   };
@@ -114,6 +137,28 @@ export default function App() {
           });
         });
         setIsSyncing(false);
+      } else {
+        // Run intelligent background check if not initial sync!
+        // We do not await this, it runs silently in the background
+        setTimeout(async () => {
+          try {
+            console.log('Running background check for new products...');
+            const localProducts = await syncService.getLocalData().then(d => d.products);
+            const remoteProducts = await api.getProducts();
+            
+            // If the counts are different, or we want a deeper check, we sync!
+            if (remoteProducts && localProducts && remoteProducts.length !== localProducts.length) {
+              console.log(`Found differences! Local: ${localProducts.length}, Remote: ${remoteProducts.length}. Updating quietly...`);
+              // Save new data
+              await storage.setProducts(remoteProducts);
+              // Cache only the NEW images (cacheAllImages skips existing ones instantly)
+              await imageCache.cacheAllImages(remoteProducts);
+              console.log('Background update complete!');
+            }
+          } catch (err) {
+            console.log('Background sync failed quietly', err);
+          }
+        }, 3000); // Wait 3 seconds after app launch to not impact performance
       }
       
       setIsReady(true);
@@ -142,7 +187,10 @@ export default function App() {
       <SafeAreaProvider>
         <View style={{ flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl }}>
           <Pressable 
-            onLongPress={() => setUpdateRequired(false)} 
+            onLongPress={() => {
+              setUpdateRequired(false);
+              setIsReady(true); // Fix the blank screen bypass
+            }} 
             delayLongPress={3000}
             style={{ width: 100, height: 100, backgroundColor: '#E8F5E9', borderRadius: RADIUS.full, justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.xl }}
           >

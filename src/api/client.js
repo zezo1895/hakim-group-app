@@ -149,9 +149,14 @@ export const api = {
   getAnalytics: async () => {
     try {
       const response = await fetch(`${BASE_URL}/products/analytics`, {
-        headers: { 'x-admin-secret': '123456' },
+        headers: { 'x-admin-secret': '1832003Ziad$$z' },
       });
-      if (!response.ok) throw new Error('فشل جلب التحليلات');
+      if (!response.ok) {
+        // السطرين دول هيطبعوا كود الخطأ والرسالة اللي راجعة من السيرفر بالظبط
+        const errorText = await response.text();
+        console.error('Server error details:', response.status, errorText);
+        throw new Error('فشل جلب التحليلات');
+      }
       return await response.json();
     } catch (error) {
       console.error('Error fetching analytics:', error);

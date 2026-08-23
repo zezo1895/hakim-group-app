@@ -71,20 +71,20 @@ const Sidebar = memo(({ categories = [], activeCategory, onSelectCategory }) => 
 const styles = StyleSheet.create({
   tabletContainer: {
     width: 200,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FAFCFB',
     borderRightWidth: 1,
     borderRightColor: COLORS.border,
-    ...SHADOWS.md,
     height: '100%',
   },
   tabletHeader: {
     padding: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.white,
   },
   tabletHeaderText: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: COLORS.text,
     textAlign: 'right',
   },
@@ -96,49 +96,61 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     borderRadius: RADIUS.md,
     marginBottom: SPACING.xs,
+    backgroundColor: 'transparent',
   },
   tabletItemActive: {
     backgroundColor: COLORS.primary,
+    ...SHADOWS.small,
   },
   tabletItemText: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.text,
+    color: COLORS.textSecondary,
     textAlign: 'right',
+    fontWeight: '500',
   },
   tabletItemTextActive: {
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   mobileContainer: {
-    height: 60,
+    height: 64,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     justifyContent: 'center',
+    ...SHADOWS.small,
+    elevation: 4, // for android
+    zIndex: 10,
   },
   mobileListContent: {
     paddingHorizontal: SPACING.md,
     alignItems: 'center',
+    gap: SPACING.xs,
   },
   mobileItem: {
-    height: 44,
+    height: 40,
     paddingHorizontal: SPACING.lg,
-    borderRadius: 22,
-    backgroundColor: COLORS.backgroundAlt,
+    borderRadius: 20,
+    backgroundColor: '#F0F4F2',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: SPACING.sm,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   mobileItemActive: {
     backgroundColor: COLORS.primary,
+    borderColor: COLORS.primaryDark,
+    ...SHADOWS.small,
   },
   mobileItemText: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.text,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   mobileItemTextActive: {
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
 });
 
