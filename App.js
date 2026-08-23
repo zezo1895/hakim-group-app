@@ -86,7 +86,12 @@ export default function App() {
       
     } catch (error) {
       console.log('Download error:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تحميل أو تثبيت التحديث.');
+      // Fallback: If intent launcher fails (e.g., missing permission), open in browser
+      try {
+        await Linking.openURL(updateUrl);
+      } catch (e) {
+        Alert.alert('خطأ', 'حدث خطأ أثناء تحميل أو تثبيت التحديث.');
+      }
       setIsDownloading(false);
     }
   };

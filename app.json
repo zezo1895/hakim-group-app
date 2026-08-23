@@ -2,7 +2,7 @@
   "expo": {
     "name": " Hakim Group",
     "slug": "hakim-group-app",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "default",
     "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "light",
@@ -21,7 +21,8 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.hakimgroup.catalog",
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "permissions": ["REQUEST_INSTALL_PACKAGES"]
     },
     "web": {
       "favicon": "./assets/app-icon.png"
