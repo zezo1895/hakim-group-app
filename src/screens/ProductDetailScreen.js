@@ -93,10 +93,6 @@ export default function ProductDetailScreen({ route, navigation }) {
   const SCREEN_WIDTH = Dimensions.get('window').width;
   
   let productImages = product?.images ? [...product.images] : (product?.image_url ? [{ url: product.image_url }] : []);
-  // بناءً على طلبك: استبعاد آخر صورة من كل المنتجات إذا كان هناك أكثر من صورة
-  if (productImages.length > 1) {
-    productImages.pop();
-  }
 
   return (
     <SafeAreaView style={styles.container}>
