@@ -1,4 +1,4 @@
-const BASE_URL = 'https://hakim-production-3e6c.up.railway.app/api';
+const BASE_URL = 'https://hakim-production-5171.up.railway.app/api';
 
 export const api = {
   // GET /api/app-version - returns { latestVersion, downloadUrl, forceUpdate }

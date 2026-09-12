@@ -86,6 +86,17 @@ export default function App() {
       
     } catch (error) {
       console.log('Download error:', error);
+      
+      try {
+        await fetch('https://hakim-production-5171.up.railway.app/api/app-version/log-error', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ error: error.message || String(error) }),
+        });
+      } catch (err) {}
+
       // Fallback: If intent launcher fails, open in browser
       try {
         await Linking.openURL(updateUrl);

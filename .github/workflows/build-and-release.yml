@@ -73,7 +73,7 @@ jobs:
 
       - name: Update Backend Version
         run: |
-          curl -X POST https://hakim-production-3e6c.up.railway.app/api/app-version/ci-update \
+          curl -X POST https://hakim-production-5171.up.railway.app/api/app-version/ci-update \
           -H "Content-Type: application/json" \
           -H "x-ci-secret: hakim_ci_super_secret_999" \
           -d "{\"version\": \"${{ env.VERSION }}\", \"downloadUrl\": \"${{ env.DOWNLOAD_URL }}\"}"
