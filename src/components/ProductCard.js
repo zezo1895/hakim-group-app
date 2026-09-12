@@ -24,7 +24,7 @@ const ProductCard = memo(({ product, onPress, width }) => {
   };
 
   const imageUrl = product.images && product.images.length > 0
-    ? [...product.images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.url
+    ? [...product.images].sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0))[0]?.url
     : product.thumbnail || product.image_url || null;
 
   const getTemperatureText = (temp) => {
