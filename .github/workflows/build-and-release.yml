@@ -12,6 +12,8 @@ jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -39,11 +41,32 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
           packager: npm
 
-      - name: Extract version from app.json
-        id: extract_version
+      - name: Auto-bump version
+        id: auto_bump
         run: |
-          VERSION=$(node -p "require('./app.json').expo.version")
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          # Read current version
+          CURRENT=$(node -p "require('./app.json').expo.version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          echo "Bumping version: $CURRENT → $NEW_VERSION"
+          
+          # Update app.json with new version using node
+          node -e "
+            const fs = require('fs');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            app.expo.version = '$NEW_VERSION';
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          "
+          
+          # Commit the version bump back to the repository
+          git config user.name "GitHub Actions CI"
+          git config user.email "actions@github.com"
+          git add app.json
+          git commit -m "chore: auto-bump version to $NEW_VERSION [skip ci]" || echo "No changes to commit"
+          git push origin main
+          
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Build APK locally via EAS
         env:
