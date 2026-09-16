@@ -28,6 +28,12 @@ export const imageCache = {
   // Generate a filename from a URL
   getFilename: (url) => {
     if (!url) return '';
+    const parts = url.split('/');
+    if (parts.length >= 2) {
+      const filename = parts[parts.length - 1].split('?')[0];
+      const parentFolder = parts[parts.length - 2];
+      return `${parentFolder}_${filename}`;
+    }
     return url.split('/').pop().split('?')[0];
   },
   
