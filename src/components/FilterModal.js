@@ -12,6 +12,18 @@ const MATERIALS = [
   { id: 'قصدير', name: 'قصدير' },
 ];
 
+const MATERIAL_NAMES = [
+  { id: 'all', name: 'الكل' },
+  { id: 'PP', name: 'PP' },
+  { id: 'PS', name: 'PS' },
+  { id: 'PET', name: 'PET' },
+  { id: 'K-RESIN', name: 'K-RESIN' },
+  { id: 'كرافت', name: 'كرافت' },
+  { id: 'ورق', name: 'ورق' },
+  { id: 'فوم امتصاص', name: 'فوم امتصاص' },
+  { id: 'فوم عادى', name: 'فوم عادى' },
+];
+
 const TEMPERATURES = [
   { id: 'all', name: 'الكل' },
   { id: 'hot', name: 'ساخن' },
@@ -19,9 +31,10 @@ const TEMPERATURES = [
   { id: 'both', name: 'ساخن وبارد' },
 ];
 
-export default function FilterModal({ visible, onClose, initialMaterial, initialTemp, onApply, materialCategories = [] }) {
+export default function FilterModal({ visible, onClose, initialMaterial, initialTemp, initialMaterialName, onApply, materialCategories = [] }) {
   const [selectedMaterial, setSelectedMaterial] = useState(initialMaterial || 'all');
   const [selectedTemp, setSelectedTemp] = useState(initialTemp || 'all');
+  const [selectedMaterialName, setSelectedMaterialName] = useState(initialMaterialName || 'all');
 
   const dynamicMaterials = [
     { id: 'all', name: 'الكل' },
@@ -32,18 +45,20 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
     if (visible) {
       setSelectedMaterial(initialMaterial || 'all');
       setSelectedTemp(initialTemp || 'all');
+      setSelectedMaterialName(initialMaterialName || 'all');
     }
-  }, [visible, initialMaterial, initialTemp]);
+  }, [visible, initialMaterial, initialTemp, initialMaterialName]);
 
   const handleApply = () => {
-    onApply(selectedMaterial, selectedTemp);
+    onApply(selectedMaterial, selectedTemp, selectedMaterialName);
     onClose();
   };
 
   const handleReset = () => {
     setSelectedMaterial('all');
     setSelectedTemp('all');
-    onApply('all', 'all');
+    setSelectedMaterialName('all');
+    onApply('all', 'all', 'all');
     onClose();
   };
 
@@ -85,6 +100,11 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>الخامة</Text>
                   {renderChips(dynamicMaterials, selectedMaterial, setSelectedMaterial)}
+                </View>
+
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>نوع الخامة</Text>
+                  {renderChips(MATERIAL_NAMES, selectedMaterialName, setSelectedMaterialName)}
                 </View>
 
                 <View style={styles.section}>

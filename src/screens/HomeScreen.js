@@ -32,6 +32,7 @@ export default function HomeScreen({ navigation }) {
     searchProducts,
     activeCategory,
     activeMaterial,
+    activeMaterialName,
     activeTemp,
     searchQuery
   } = useProducts();
@@ -97,11 +98,11 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('Admin');
   };
 
-  const handleApplyFilters = (material, temp) => {
-    setAdvancedFilters(material, temp);
+  const handleApplyFilters = (material, temp, materialName) => {
+    setAdvancedFilters(material, temp, materialName);
   };
 
-  const hasActiveAdvancedFilters = activeMaterial !== 'all' || activeTemp !== 'all';
+  const hasActiveAdvancedFilters = activeMaterial !== 'all' || activeTemp !== 'all' || activeMaterialName !== 'all';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -193,6 +194,7 @@ export default function HomeScreen({ navigation }) {
         onClose={() => setFilterModalVisible(false)}
         initialMaterial={activeMaterial}
         initialTemp={activeTemp}
+        initialMaterialName={activeMaterialName}
         onApply={handleApplyFilters}
         materialCategories={materialCategories}
       />

@@ -7,6 +7,7 @@ export function useProducts() {
   const [materialCategories, setMaterialCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeMaterial, setActiveMaterial] = useState('all');
+  const [activeMaterialName, setActiveMaterialName] = useState('all');
   const [activeTemp, setActiveTemp] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -41,9 +42,10 @@ export function useProducts() {
     setActiveCategory(categoryId);
   }, []);
 
-  const setAdvancedFilters = useCallback((material, temp) => {
+  const setAdvancedFilters = useCallback((material, temp, materialName) => {
     setActiveMaterial(material);
     setActiveTemp(temp);
+    setActiveMaterialName(materialName || 'all');
   }, []);
 
   const searchProducts = useCallback((query) => {
@@ -69,6 +71,9 @@ export function useProducts() {
 
     const matchesMaterial = activeMaterial === 'all' || !activeMaterial || p.material_category === activeMaterial;
     if (!matchesMaterial) return false;
+
+    const matchesMaterialName = activeMaterialName === 'all' || !activeMaterialName || p.material_name === activeMaterialName;
+    if (!matchesMaterialName) return false;
 
     const matchesTemp = activeTemp === 'all' || !activeTemp || p.temp === activeTemp;
     if (!matchesTemp) return false;
@@ -98,6 +103,7 @@ export function useProducts() {
     searchProducts,
     activeCategory,
     activeMaterial,
+    activeMaterialName,
     activeTemp,
     searchQuery,
     setSearchQuery
