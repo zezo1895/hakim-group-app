@@ -12,6 +12,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import SyncProgressComponent from './src/components/SyncProgress';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from './src/context/ThemeContext';
 import './src/i18n';
 import { syncService } from './src/services/syncService';
@@ -38,7 +39,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const Stack = createNativeStackNavigator();
 
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 
 function AppContent() {
   const [isReady, setIsReady] = useState(false);
