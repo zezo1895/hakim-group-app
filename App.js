@@ -13,7 +13,8 @@ import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import SyncProgressComponent from './src/components/SyncProgress';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import './src/i18n';
 import { syncService } from './src/services/syncService';
 import { imageCache } from './src/services/imageCache';
@@ -42,6 +43,8 @@ const Stack = createNativeStackNavigator();
 
 
 function AppContent() {
+  const { colors, isDark } = useTheme();
+  const { t, i18n } = useTranslation();
   const [isReady, setIsReady] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ progress: 0, message: '', stage: 'data' });
