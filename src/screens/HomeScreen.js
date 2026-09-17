@@ -52,11 +52,33 @@ export default function HomeScreen({ navigation }) {
   const totalGap = SPACING.md * (numColumns - 1);
   const cardWidth = Math.max(0, Math.floor((availableWidth - totalGap) / numColumns));
 
+  const handleManualFullSync = async () => {
+    setIsSyncing(true);
+    try {
+      await syncService.fullSync(({ stage, current, total, message }) => {
+        setSyncProgress({
+          progress: total > 0 ? current / total : 0,
+          message,
+          stage,
+        });
+      });
+      // Fetch lids map as well
+      const { storage } = require('../services/storage');
+      try {
+        const lidsMap = await api.getLidsMap();
+        if (lidsMap) await storage.setLidsMap(lidsMap);
+      } catch (err) {}
+      await refresh();
+    } catch (e) {
+      console.log('Manual sync failed', e);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await syncService.fullSync(({ stage, current, total, message }) => {
-    });
-    await refresh();
+    await handleManualFullSync();
     setIsRefreshing(false);
   };
 
@@ -121,6 +143,13 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
         </View>
         <View style={styles.searchRow}>
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={handleManualFullSync}
+            disabled={isSyncing}
+          >
+            <Ionicons name="sync" size={24} color={isSyncing ? COLORS.textLight : COLORS.primary} />
+          </TouchableOpacity>
           <View style={styles.searchContainer}>
             <SearchBar 
               value={searchQuery}
@@ -231,6 +260,17 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flex: 1,
+    marginRight: SPACING.sm,
+  },
+  refreshBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.md,
+    backgroundColor: '#FAFCFB',
+    borderWidth: 1,
+    borderColor: '#E8EFEA',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: SPACING.sm,
   },
   filterBtn: {

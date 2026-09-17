@@ -7,6 +7,7 @@ const KEYS = {
   LAST_SYNC: 'hakim_last_sync',
   IMAGE_MAP: 'hakim_image_map',
   SEARCH_HISTORY: 'hakim_search_history',
+  LIDS_MAP: 'hakim_lids_map',
 };
 
 const getData = async (key) => {
@@ -37,6 +38,9 @@ export const storage = {
   getMaterialCategories: () => getData(KEYS.MATERIAL_CATEGORIES),
   setMaterialCategories: (categories) => setData(KEYS.MATERIAL_CATEGORIES, categories),
   
+  getLidsMap: () => getData(KEYS.LIDS_MAP),
+  setLidsMap: (map) => setData(KEYS.LIDS_MAP, map),
+
   getLastSync: () => getData(KEYS.LAST_SYNC),
   setLastSync: (timestamp) => setData(KEYS.LAST_SYNC, timestamp),
   

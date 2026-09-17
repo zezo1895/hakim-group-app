@@ -78,6 +78,18 @@ export const api = {
       throw error;
     }
   },
+
+  // GET /api/products/lids-map
+  getLidsMap: async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/products/lids-map`);
+      if (!response.ok) throw new Error('Failed to fetch lids map');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching lids map:', error);
+      throw error;
+    }
+  },
   
   // GET /api/products/material-categories - returns [{id, name}]
   getMaterialCategories: async () => {

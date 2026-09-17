@@ -12,6 +12,8 @@ import HomeScreen from './src/screens/HomeScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
 import AdminScreen from './src/screens/AdminScreen';
 import SyncProgressComponent from './src/components/SyncProgress';
+import { ThemeProvider } from './src/context/ThemeContext';
+import './src/i18n';
 import { syncService } from './src/services/syncService';
 import { imageCache } from './src/services/imageCache';
 import { api } from './src/api/client';
@@ -38,7 +40,7 @@ const Stack = createNativeStackNavigator();
 
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-export default function App() {
+function AppContent() {
   const [isReady, setIsReady] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ progress: 0, message: '', stage: 'data' });
@@ -103,8 +105,8 @@ export default function App() {
       } catch (e) {}
 
       Alert.alert(
-        'سبب منع التثبيت الداخلي', 
-        `الأندرويد منع التثبيت الداخلي والسبب التقني هو:\n\n${error.message || String(error)}\n\n(تم تحويلك للمتصفح كبديل مؤقت)`
+        'خطأ في التحديث', 
+        `فشل تنزيل أو تثبيت التحديث. يرجى التأكد من اتصالك بالإنترنت والمحاولة مرة أخرى:\n\n${error.message || String(error)}\n\n(تم إرسال تقرير بالخطأ للمطور)`
       );
       setIsDownloading(false);
     }
@@ -165,6 +167,12 @@ export default function App() {
             const localProducts = await syncService.getLocalData().then(d => d.products);
             const remoteProducts = await api.getProducts();
             
+            // Fetch lids map as well
+            try {
+              const lidsMap = await api.getLidsMap();
+              if (lidsMap) await storage.setLidsMap(lidsMap);
+            } catch (err) {}
+
             // If the counts are different, or we want a deeper check, we sync!
             if (remoteProducts && localProducts && remoteProducts.length !== localProducts.length) {
               console.log(`Found differences! Local: ${localProducts.length}, Remote: ${remoteProducts.length}. Updating quietly...`);
@@ -213,17 +221,17 @@ export default function App() {
             delayLongPress={3000}
             style={{ width: 100, height: 100, backgroundColor: '#E8F5E9', borderRadius: RADIUS.full, justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.xl }}
           >
-            <Text style={{ fontSize: 40 }}>🚀</Text>
+            <Text style={{ fontSize: 40 }}>⚙️</Text>
           </Pressable>
           <Text style={{ fontSize: FONT_SIZES.title, fontWeight: 'bold', color: COLORS.primary, marginBottom: SPACING.md, textAlign: 'center' }}>تحديث إجباري</Text>
           <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: SPACING.xxl, textAlign: 'center', lineHeight: 24 }}>
-            تم إطلاق نسخة جديدة من التطبيق. يرجى التحديث الآن لضمان عمل التطبيق بأفضل شكل واستمرار مزامنة البيانات.
+            تم إطلاق نسخة جديدة من التطبيق. يرجى تحميلها الآن لضمان عمل التطبيق بشكل صحيح.
           </Text>
           <View style={{ width: '100%', overflow: 'hidden', borderRadius: RADIUS.md }}>
             {isDownloading ? (
               <View style={{ backgroundColor: COLORS.surfaceAlt, paddingVertical: SPACING.md, alignItems: 'center' }}>
                 <Text style={{ color: COLORS.text, fontSize: FONT_SIZES.md, marginBottom: SPACING.sm, fontWeight: 'bold' }}>
-                  جاري التحميل... {Math.round(downloadProgress * 100)}%
+                  جاري التنزيل... {Math.round(downloadProgress * 100)}%
                 </Text>
                 <View style={{ width: '90%', height: 6, backgroundColor: COLORS.border, borderRadius: RADIUS.full, overflow: 'hidden' }}>
                   <View style={{ width: `${downloadProgress * 100}%`, height: '100%', backgroundColor: COLORS.primary }} />
@@ -231,7 +239,7 @@ export default function App() {
               </View>
             ) : (
               <Pressable onPress={handleDownloadAndInstall} style={{ backgroundColor: COLORS.primary, paddingVertical: SPACING.md, alignItems: 'center' }}>
-                <Text style={{ color: '#FFF', fontSize: FONT_SIZES.lg, fontWeight: 'bold' }}>تحديث وتثبيت الآن</Text>
+                <Text style={{ color: '#FFF', fontSize: FONT_SIZES.lg, fontWeight: 'bold' }}>تنزيل وتثبيت الآن</Text>
               </Pressable>
             )}
           </View>
@@ -253,5 +261,13 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

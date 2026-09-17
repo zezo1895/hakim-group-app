@@ -40,10 +40,33 @@ export default function ProductDetailScreen({ route, navigation }) {
 
         if (!details) {
           const localData = await syncService.getLocalData();
+          const { storage } = require('../services/storage');
           if (localData && localData.products) {
             const prod = localData.products.find(p => String(p.id) === String(productId));
             if (prod) {
-              details = prod;
+              let localSiblings = [];
+              let localLids = [];
+              
+              // Calculate siblings: same group_id OR in related_groups
+              if (prod.group_id) {
+                localSiblings = localData.products.filter(p => 
+                  p.id !== prod.id && (
+                    p.group_id === prod.group_id || 
+                    (p.related_groups_raw && p.related_groups_raw.includes(String(prod.group_id)))
+                  )
+                );
+              }
+              
+              // Calculate lids using LIDS_MAP
+              try {
+                const lidsMap = await storage.getLidsMap();
+                if (lidsMap && lidsMap[prod.id]) {
+                  const lidIds = lidsMap[prod.id];
+                  localLids = localData.products.filter(p => lidIds.includes(p.id));
+                }
+              } catch (e) {}
+
+              details = { data: prod, siblings: localSiblings, lids: localLids };
             }
           }
         }
@@ -51,8 +74,8 @@ export default function ProductDetailScreen({ route, navigation }) {
         if (details) {
           const productData = details.data ? details.data : details;
           setProduct(productData);
-          setSiblings(productData.siblings || []);
-          setLids(productData.lids || []);
+          setSiblings(details.siblings || productData.siblings || []);
+          setLids(details.lids || productData.lids || []);
         }
       } catch (err) {} finally {
         setIsLoading(false);
