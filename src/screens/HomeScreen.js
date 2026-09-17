@@ -19,6 +19,9 @@ import { api } from '../api/client';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 export default function HomeScreen({ navigation }) {
+  const { colors, isDark, changeTheme } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
   const { width: windowWidth } = useWindowDimensions();
   const tablet = isTablet(windowWidth);
   const { 
@@ -53,9 +56,6 @@ export default function HomeScreen({ navigation }) {
   const cardWidth = Math.max(0, Math.floor((availableWidth - totalGap) / numColumns));
 
   const handleManualFullSync = async () => {
-  const { colors, isDark, changeTheme } = useTheme();
-  const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
     setIsSyncing(true);
     try {
       await syncService.fullSync(({ stage, current, total, message }) => {

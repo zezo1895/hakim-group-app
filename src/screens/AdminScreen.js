@@ -19,6 +19,9 @@ import { syncService } from '../services/syncService';
 import { storage } from '../services/storage';
 
 export default function AdminScreen({ navigation }) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
   const deviceInfo = useDeviceInfo();
   const [analytics, setAnalytics] = useState({ topSearches: [], topProducts: [] });
   const [syncInfo, setSyncInfo] = useState({ lastSync: 'لم يتم', productCount: 0 });
@@ -35,10 +38,6 @@ export default function AdminScreen({ navigation }) {
   }, []);
 
   const fetchAppVersion = async () => {
-  const { t, i18n } = useTranslation();
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
     try {
       if (api && api.checkAppVersion) {
         const data = await api.checkAppVersion();
