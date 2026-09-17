@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, memo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 import { View, Text, StyleSheet, Animated, Image } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { COLORS, SPACING, FONT_SIZES } from '../theme';
@@ -6,6 +8,10 @@ import { COLORS, SPACING, FONT_SIZES } from '../theme';
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const SyncProgress = memo(({ progress = 0, message = '', stage = '' }) => {
+  const { t, i18n } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
   const animatedProgress = useRef(new Animated.Value(0)).current;
   
   // Circle configuration
@@ -47,7 +53,7 @@ const SyncProgress = memo(({ progress = 0, message = '', stage = '' }) => {
           <Svg width={size} height={size}>
             {/* Background Circle */}
             <Circle
-              stroke={COLORS.border}
+              stroke={colors.border}
               fill="none"
               cx={size / 2}
               cy={size / 2}
@@ -56,7 +62,7 @@ const SyncProgress = memo(({ progress = 0, message = '', stage = '' }) => {
             />
             {/* Animated Progress Circle */}
             <AnimatedCircle
-              stroke={COLORS.primary}
+              stroke={colors.primary}
               fill="none"
               cx={size / 2}
               cy={size / 2}
@@ -93,7 +99,7 @@ const SyncProgress = memo(({ progress = 0, message = '', stage = '' }) => {
   );
 });
 
-const styles = StyleSheet.create({
+const getStyles = (colors, isDark) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFCFB', // Very subtle off-white to make it less plain
@@ -112,7 +118,7 @@ const styles = StyleSheet.create({
   brandNameArabic: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.secondary, // Assuming Hakim Blue is secondary
+    color: colors.secondary, // Assuming Hakim Blue is secondary
   },
   progressSection: {
     alignItems: 'center',
@@ -133,16 +139,16 @@ const styles = StyleSheet.create({
   percentageText: {
     fontSize: 42,
     fontWeight: '300', // Light font weight for elegance
-    color: COLORS.primary, // Hakim Green
+    color: colors.primary, // Hakim Green
   },
   circleShadow: {
     position: 'absolute',
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     opacity: 0.1,
-    shadowColor: COLORS.primary,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 30,
@@ -156,7 +162,7 @@ const styles = StyleSheet.create({
   titleText: {
     fontSize: 24,
     fontWeight: '500',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 10,
   },
   messageText: {

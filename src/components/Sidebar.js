@@ -1,9 +1,15 @@
 import React, { memo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZES } from '../theme';
 import { isTablet } from '../utils/responsive';
 
 const Sidebar = memo(({ categories = [], activeCategory, onSelectCategory }) => {
+  const { t, i18n } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
   const allCategories = [{ id: 'all', name: 'الكل' }, ...categories];
 
   const renderTabletItem = ({ item }) => {
@@ -68,24 +74,24 @@ const Sidebar = memo(({ categories = [], activeCategory, onSelectCategory }) => 
   );
 });
 
-const styles = StyleSheet.create({
+const getStyles = (colors, isDark) => StyleSheet.create({
   tabletContainer: {
     width: 200,
     backgroundColor: '#FAFCFB',
     borderRightWidth: 1,
-    borderRightColor: COLORS.border,
+    borderRightColor: colors.border,
     height: '100%',
   },
   tabletHeader: {
     padding: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    backgroundColor: COLORS.white,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.white,
   },
   tabletHeaderText: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     textAlign: 'right',
   },
   tabletListContent: {
@@ -99,24 +105,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   tabletItemActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     ...SHADOWS.small,
   },
   tabletItemText: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'right',
     fontWeight: '500',
   },
   tabletItemTextActive: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
   },
   mobileContainer: {
     height: 64,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
     justifyContent: 'center',
     ...SHADOWS.small,
     elevation: 4, // for android
@@ -139,17 +145,17 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   mobileItemActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primaryDark,
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
     ...SHADOWS.small,
   },
   mobileItemText: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   mobileItemTextActive: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: '700',
   },
 });

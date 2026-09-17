@@ -11,6 +11,9 @@ import ImageCarousel from '../components/ImageCarousel';
 import CachedImage from '../components/CachedImage';
 
 export default function ProductDetailScreen({ route, navigation }) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
   const { productId, productName } = route.params;
   const tablet = isTablet();
 
@@ -89,7 +92,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   const renderHeader = () => (
     <View style={styles.header}>
       <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+        <Ionicons name="arrow-back" size={24} color={colors.primary} />
       </Pressable>
       <Text style={styles.headerTitle} numberOfLines={1}>{productName}</Text>
       <View style={styles.backButton} style={{ backgroundColor: 'transparent' }} />
@@ -110,7 +113,7 @@ export default function ProductDetailScreen({ route, navigation }) {
     return 'غير محدد';
   };
 
-  if (isLoading) return <View style={styles.loadingCenter}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
+  if (isLoading) return <View style={styles.loadingCenter}><ActivityIndicator size="large" color={colors.primary} /></View>;
   if (!product) return <View style={styles.loadingCenter}><Text>بيانات غير متاحة</Text></View>;
 
   const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -128,7 +131,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         />
         
         <View style={styles.contentContainer}>
-          <Text style={styles.mainTitle}>{product.name}</Text>
+          <Text style={styles.mainTitle}>{i18n.language === 'en' && product.name_en ? product.name_en : product.name}</Text>
           
           <View style={styles.sectionBlock}>
             <Text style={styles.blockTitle}>المقاس</Text>
@@ -158,7 +161,7 @@ export default function ProductDetailScreen({ route, navigation }) {
           {product.notes && (
             <View style={styles.sectionBlock}>
               <Text style={styles.blockTitle}>ملاحظات</Text>
-              <Text style={styles.blockValue}>{product.notes}</Text>
+              <Text style={styles.blockValue}>{i18n.language === 'en' && product.notes_en ? product.notes_en : product.notes}</Text>
             </View>
           )}
         </View>
@@ -218,7 +221,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors, isDark) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFCFB' },
   loadingCenter: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
@@ -242,13 +245,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     alignItems: 'center' 
   },
-  backButtonText: { fontSize: 24, color: COLORS.primary, fontWeight: '700' },
+  backButtonText: { fontSize: 24, color: colors.primary, fontWeight: '700' },
   headerTitle: { 
     flex: 1, 
     textAlign: 'center', 
     fontSize: FONT_SIZES.lg, 
     fontWeight: '700', 
-    color: COLORS.text,
+    color: colors.text,
     paddingHorizontal: SPACING.md
   },
   
@@ -256,7 +259,7 @@ const styles = StyleSheet.create({
   
   contentContainer: { 
     padding: SPACING.xl, 
-    backgroundColor: COLORS.white, 
+    backgroundColor: colors.white, 
     marginHorizontal: SPACING.md, 
     marginTop: -30, // Overlap effect
     borderRadius: RADIUS.lg, 
@@ -267,7 +270,7 @@ const styles = StyleSheet.create({
   mainTitle: { 
     fontSize: 26, 
     fontWeight: '800', 
-    color: COLORS.text, 
+    color: colors.text, 
     textAlign: 'right', 
     marginBottom: SPACING.xl, 
     lineHeight: 34
@@ -281,14 +284,14 @@ const styles = StyleSheet.create({
   },
   blockTitle: { 
     fontSize: FONT_SIZES.sm, 
-    color: COLORS.textSecondary, 
+    color: colors.textSecondary, 
     textAlign: 'right', 
     marginBottom: 6, 
     fontWeight: '500'
   },
   blockValue: { 
     fontSize: FONT_SIZES.md, 
-    color: COLORS.text, 
+    color: colors.text, 
     fontWeight: '700', 
     textAlign: 'right' 
   },
@@ -299,7 +302,7 @@ const styles = StyleSheet.create({
   sectionTitle: { 
     fontSize: 20, 
     fontWeight: '800', 
-    color: COLORS.text, 
+    color: colors.text, 
     marginHorizontal: SPACING.lg, 
     marginBottom: SPACING.md, 
     textAlign: 'right' 

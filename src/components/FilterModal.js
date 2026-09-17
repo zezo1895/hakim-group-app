@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, FONT_SIZES, SHADOWS } from '../theme';
@@ -26,8 +28,8 @@ const MATERIAL_NAMES = [
 
 const TEMPERATURES = [
   { id: 'all', name: 'الكل' },
-  { id: 'hot', name: 'ساخن' },
-  { id: 'cold', name: 'بارد' },
+  { id: 'hot', name: t('hot') },
+  { id: 'cold', name: t('cold') },
   { id: 'both', name: 'ساخن وبارد' },
 ];
 
@@ -50,6 +52,10 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
   }, [visible, initialMaterial, initialTemp, initialMaterialName]);
 
   const handleApply = () => {
+  const { t, i18n } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
     onApply(selectedMaterial, selectedTemp, selectedMaterialName);
     onClose();
   };
@@ -90,7 +96,7 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
             <View style={styles.modalContent}>
               <View style={styles.header}>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                  <Ionicons name="close" size={24} color={COLORS.text} />
+                  <Ionicons name="close" size={24} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.title}>تصفية المنتجات</Text>
                 <View style={styles.closeBtn} />
@@ -132,14 +138,14 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
 // Add import ScrollView if needed
 import { ScrollView } from 'react-native';
 
-const styles = StyleSheet.create({
+const getStyles = (colors, isDark) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: COLORS.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderTopLeftRadius: RADIUS.xl,
     borderTopRightRadius: RADIUS.xl,
     maxHeight: '80%',
@@ -151,12 +157,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   title: {
     fontSize: FONT_SIZES.lg,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
   },
   closeBtn: {
     width: 40,
@@ -173,7 +179,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: FONT_SIZES.md,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: SPACING.sm,
     textAlign: 'right',
     writingDirection: 'rtl',
@@ -186,40 +192,40 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
   },
   chipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   chipTextActive: {
-    color: COLORS.white,
+    color: colors.white,
     fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row-reverse',
     padding: SPACING.md,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    backgroundColor: COLORS.white,
+    borderTopColor: colors.border,
+    backgroundColor: colors.white,
   },
   applyBtn: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingVertical: SPACING.md,
     borderRadius: RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   applyBtnText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: FONT_SIZES.md,
     fontWeight: 'bold',
   },
@@ -231,7 +237,7 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.md,
   },
   resetBtnText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     fontSize: FONT_SIZES.md,
     fontWeight: 'bold',
   },

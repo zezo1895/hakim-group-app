@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Animated, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZES } from '../theme';
 
 const AdminPasswordModal = ({ visible, onClose, onSuccess }) => {
+  const { t, i18n } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -73,7 +79,7 @@ const AdminPasswordModal = ({ visible, onClose, onSuccess }) => {
           ]}
         >
           <View style={styles.header}>
-            <Ionicons name="lock-closed" size={24} color={COLORS.primary} style={styles.headerIcon} />
+            <Ionicons name="lock-closed" size={24} color={colors.primary} style={styles.headerIcon} />
             <Text style={styles.title}>دخول لوحة التحكم</Text>
           </View>
 
@@ -81,7 +87,7 @@ const AdminPasswordModal = ({ visible, onClose, onSuccess }) => {
             <TextInput
               style={[styles.input, isFocused && styles.inputFocused, error ? styles.inputError : null]}
               placeholder="أدخل كلمة المرور"
-              placeholderTextColor={COLORS.textLight}
+              placeholderTextColor={colors.textLight}
               secureTextEntry
               value={password}
               onChangeText={(text) => {
@@ -113,7 +119,7 @@ const AdminPasswordModal = ({ visible, onClose, onSuccess }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors, isDark) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'center',
@@ -126,7 +132,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: '85%',
     maxWidth: 400,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: RADIUS.lg,
     padding: SPACING.lg,
     ...SHADOWS.lg,
@@ -143,7 +149,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FONT_SIZES.lg,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: colors.text,
   },
   inputContainer: {
     marginBottom: SPACING.md,
@@ -151,22 +157,22 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md,
     fontSize: FONT_SIZES.md,
-    color: COLORS.text,
-    backgroundColor: COLORS.backgroundAlt,
+    color: colors.text,
+    backgroundColor: colors.backgroundAlt,
   },
   inputFocused: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.white,
+    borderColor: colors.primary,
+    backgroundColor: colors.white,
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: colors.error,
   },
   errorText: {
-    color: COLORS.error,
+    color: colors.error,
     fontSize: FONT_SIZES.sm,
     textAlign: 'right',
     marginBottom: SPACING.md,
@@ -175,7 +181,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
   },
   loginButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     height: 50,
     borderRadius: RADIUS.md,
     justifyContent: 'center',
@@ -183,7 +189,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   loginButtonText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: FONT_SIZES.md,
     fontWeight: 'bold',
   },
@@ -193,7 +199,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: COLORS.textLight,
+    color: colors.textLight,
     fontSize: FONT_SIZES.md,
   },
 });

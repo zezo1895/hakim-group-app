@@ -53,6 +53,9 @@ export default function HomeScreen({ navigation }) {
   const cardWidth = Math.max(0, Math.floor((availableWidth - totalGap) / numColumns));
 
   const handleManualFullSync = async () => {
+  const { colors, isDark, changeTheme } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
     setIsSyncing(true);
     try {
       await syncService.fullSync(({ stage, current, total, message }) => {
@@ -148,7 +151,7 @@ export default function HomeScreen({ navigation }) {
             onPress={handleManualFullSync}
             disabled={isSyncing}
           >
-            <Ionicons name="sync" size={24} color={isSyncing ? COLORS.textLight : COLORS.primary} />
+            <Ionicons name="sync" size={24} color={isSyncing ? colors.textLight : colors.primary} />
           </TouchableOpacity>
           <View style={styles.searchContainer}>
             <SearchBar 
@@ -161,7 +164,7 @@ export default function HomeScreen({ navigation }) {
             style={[styles.filterBtn, hasActiveAdvancedFilters && styles.filterBtnActive]} 
             onPress={() => setFilterModalVisible(true)}
           >
-            <Ionicons name="options-outline" size={24} color={hasActiveAdvancedFilters ? COLORS.white : COLORS.primary} />
+            <Ionicons name="options-outline" size={24} color={hasActiveAdvancedFilters ? colors.white : colors.primary} />
             {hasActiveAdvancedFilters && <View style={styles.filterDot} />}
           </TouchableOpacity>
         </View>
@@ -197,8 +200,8 @@ export default function HomeScreen({ navigation }) {
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={handleRefresh}
-                colors={[COLORS.primary]}
-                tintColor={COLORS.primary}
+                colors={[colors.primary]}
+                tintColor={colors.primary}
               />
             }
             ListEmptyComponent={
@@ -231,13 +234,13 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors, isDark) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background, // Uses new off-white
+    backgroundColor: colors.background, // Uses new off-white
   },
   header: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
@@ -279,15 +282,15 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     backgroundColor: '#FAFCFB',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
     ...SHADOWS.small,
   },
   filterBtnActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primaryDark,
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   filterDot: {
     position: 'absolute',
@@ -298,7 +301,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#E02424', // Elegant red
     borderWidth: 2,
-    borderColor: COLORS.white,
+    borderColor: colors.white,
   },
   mainContainer: {
     flex: 1,
@@ -322,7 +325,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: FONT_SIZES.lg,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
   },

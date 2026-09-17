@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 import { 
   View, 
   Text, 
@@ -33,6 +35,10 @@ export default function AdminScreen({ navigation }) {
   }, []);
 
   const fetchAppVersion = async () => {
+  const { t, i18n } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
     try {
       if (api && api.checkAppVersion) {
         const data = await api.checkAppVersion();
@@ -173,16 +179,16 @@ export default function AdminScreen({ navigation }) {
           <Text style={styles.cardTitle}>إدارة التحديثات (APK)</Text>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>رقم الإصدار الحالي للشبكة:</Text>
-            <Text style={[styles.infoValue, { color: COLORS.primary, fontWeight: 'bold' }]}>{appVersion.latestVersion}</Text>
+            <Text style={[styles.infoValue, { color: colors.primary, fontWeight: 'bold' }]}>{appVersion.latestVersion}</Text>
           </View>
           
           <Text style={[styles.infoLabel, { marginTop: SPACING.md, marginBottom: SPACING.xs }]}>رابط التحميل للنسخة الجديدة:</Text>
           <View style={{
-            borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, 
-            paddingHorizontal: SPACING.sm, marginBottom: SPACING.md, backgroundColor: COLORS.surfaceAlt
+            borderWidth: 1, borderColor: colors.border, borderRadius: RADIUS.md, 
+            paddingHorizontal: SPACING.sm, marginBottom: SPACING.md, backgroundColor: colors.surfaceAlt
           }}>
             <TextInput
-              style={{ height: 40, textAlign: 'right', color: COLORS.text }}
+              style={{ height: 40, textAlign: 'right', color: colors.text }}
               placeholder="ضع رابط التحميل هنا..."
               value={newApkUrl}
               onChangeText={setNewApkUrl}
@@ -190,7 +196,7 @@ export default function AdminScreen({ navigation }) {
           </View>
 
           <Pressable 
-            style={[styles.button, { backgroundColor: isRequestingUpdate ? COLORS.textLight : COLORS.primary }]} 
+            style={[styles.button, { backgroundColor: isRequestingUpdate ? colors.textLight : colors.primary }]} 
             onPress={handleRequestUpdate}
             disabled={isRequestingUpdate}
           >
@@ -259,7 +265,7 @@ export default function AdminScreen({ navigation }) {
               <Text style={styles.buttonText}>مزامنة الآن</Text>
             </Pressable>
             <Pressable style={[styles.button, styles.clearButton]} onPress={handleClearCache}>
-              <Text style={[styles.buttonText, {color: COLORS.error}]}>مسح الذاكرة المؤقتة</Text>
+              <Text style={[styles.buttonText, {color: colors.error}]}>مسح الذاكرة المؤقتة</Text>
             </Pressable>
           </View>
         </View>
@@ -268,16 +274,16 @@ export default function AdminScreen({ navigation }) {
 
       {/* OTP Modal */}
       <Modal visible={otpModalVisible} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: COLORS.overlay, justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ width: '80%', backgroundColor: COLORS.surface, padding: SPACING.lg, borderRadius: RADIUS.lg, alignItems: 'center' }}>
-            <Text style={{ fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.md }}>أدخل كود التحقق (OTP)</Text>
-            <Text style={{ fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, marginBottom: SPACING.lg, textAlign: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: '80%', backgroundColor: colors.surface, padding: SPACING.lg, borderRadius: RADIUS.lg, alignItems: 'center' }}>
+            <Text style={{ fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: colors.text, marginBottom: SPACING.md }}>أدخل كود التحقق (OTP)</Text>
+            <Text style={{ fontSize: FONT_SIZES.sm, color: colors.textSecondary, marginBottom: SPACING.lg, textAlign: 'center' }}>
               تم إرسال كود مكون من 6 أرقام إلى بريدك الإلكتروني
             </Text>
             
             <TextInput
               style={{ 
-                width: '100%', height: 50, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md,
+                width: '100%', height: 50, borderWidth: 1, borderColor: colors.border, borderRadius: RADIUS.md,
                 textAlign: 'center', fontSize: FONT_SIZES.xl, letterSpacing: 5, marginBottom: SPACING.xl
               }}
               placeholder="000000"
@@ -288,10 +294,10 @@ export default function AdminScreen({ navigation }) {
             />
 
             <View style={{ flexDirection: 'row', width: '100%', gap: SPACING.md }}>
-              <Pressable style={[styles.button, { flex: 1, backgroundColor: COLORS.textLight }]} onPress={() => setOtpModalVisible(false)}>
+              <Pressable style={[styles.button, { flex: 1, backgroundColor: colors.textLight }]} onPress={() => setOtpModalVisible(false)}>
                 <Text style={styles.buttonText}>إلغاء</Text>
               </Pressable>
-              <Pressable style={[styles.button, { flex: 1, backgroundColor: COLORS.primary }]} onPress={handleConfirmUpdate}>
+              <Pressable style={[styles.button, { flex: 1, backgroundColor: colors.primary }]} onPress={handleConfirmUpdate}>
                 <Text style={styles.buttonText}>تأكيد</Text>
               </Pressable>
             </View>
@@ -302,33 +308,33 @@ export default function AdminScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: COLORS.border },
+const getStyles = (colors, isDark) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: colors.border },
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  backButtonText: { fontSize: 24, color: COLORS.primary, fontWeight: 'bold' },
-  headerTitle: { flex: 1, textAlign: 'center', fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: COLORS.text, writingDirection: 'rtl' },
+  backButtonText: { fontSize: 24, color: colors.primary, fontWeight: 'bold' },
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: colors.text, writingDirection: 'rtl' },
   scrollContent: { padding: SPACING.md, paddingBottom: SPACING.xxl },
   card: { backgroundColor: '#FFFFFF', borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.md },
-  cardTitle: { fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: COLORS.primary, marginBottom: SPACING.md, textAlign: 'right', writingDirection: 'rtl', borderBottomWidth: 1, borderBottomColor: COLORS.border, paddingBottom: SPACING.sm },
+  cardTitle: { fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: colors.primary, marginBottom: SPACING.md, textAlign: 'right', writingDirection: 'rtl', borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: SPACING.sm },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SPACING.sm },
-  infoLabel: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: 'bold', textAlign: 'right', writingDirection: 'rtl' },
-  infoValue: { fontSize: FONT_SIZES.md, color: COLORS.text, textAlign: 'left', flex: 1, paddingLeft: SPACING.md },
-  emptyText: { textAlign: 'center', color: COLORS.textSecondary, marginVertical: SPACING.sm },
+  infoLabel: { fontSize: FONT_SIZES.md, color: colors.textSecondary, fontWeight: 'bold', textAlign: 'right', writingDirection: 'rtl' },
+  infoValue: { fontSize: FONT_SIZES.md, color: colors.text, textAlign: 'left', flex: 1, paddingLeft: SPACING.md },
+  emptyText: { textAlign: 'center', color: colors.textSecondary, marginVertical: SPACING.sm },
   barChartRow: { marginBottom: SPACING.md },
   barChartLabels: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SPACING.xs },
-  barChartQuery: { fontSize: FONT_SIZES.sm, color: COLORS.text, flex: 1, textAlign: 'right', writingDirection: 'rtl' },
-  barChartCount: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, fontWeight: 'bold', marginLeft: SPACING.sm },
-  barChartTrack: { height: 8, backgroundColor: COLORS.surface, borderRadius: RADIUS.round, overflow: 'hidden' },
-  barChartFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: RADIUS.round },
-  productRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: SPACING.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border },
-  productName: { fontSize: FONT_SIZES.md, color: COLORS.text, flex: 1, textAlign: 'right', writingDirection: 'rtl' },
+  barChartQuery: { fontSize: FONT_SIZES.sm, color: colors.text, flex: 1, textAlign: 'right', writingDirection: 'rtl' },
+  barChartCount: { fontSize: FONT_SIZES.sm, color: colors.textSecondary, fontWeight: 'bold', marginLeft: SPACING.sm },
+  barChartTrack: { height: 8, backgroundColor: colors.surface, borderRadius: RADIUS.round, overflow: 'hidden' },
+  barChartFill: { height: '100%', backgroundColor: colors.primary, borderRadius: RADIUS.round },
+  productRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: SPACING.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  productName: { fontSize: FONT_SIZES.md, color: colors.text, flex: 1, textAlign: 'right', writingDirection: 'rtl' },
   viewCountContainer: { flexDirection: 'row', alignItems: 'center', marginLeft: SPACING.md },
-  viewCount: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginRight: SPACING.xs, fontWeight: 'bold' },
+  viewCount: { fontSize: FONT_SIZES.md, color: colors.textSecondary, marginRight: SPACING.xs, fontWeight: 'bold' },
   eyeIcon: { fontSize: FONT_SIZES.md },
   buttonContainer: { marginTop: SPACING.lg, gap: SPACING.md },
   button: { paddingVertical: SPACING.md, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
-  syncButton: { backgroundColor: COLORS.primary },
-  clearButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: COLORS.error },
+  syncButton: { backgroundColor: colors.primary },
+  clearButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.error },
   buttonText: { color: '#FFFFFF', fontSize: FONT_SIZES.md, fontWeight: 'bold' },
 });

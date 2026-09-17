@@ -1,4 +1,6 @@
 import React, { useState, memo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 import { View, ScrollView, StyleSheet, Dimensions, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CachedImage from './CachedImage';
@@ -8,6 +10,10 @@ import { isTablet } from '../utils/responsive';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const ImageCarousel = memo(({ images = [], height = 300, onImagePress }) => {
+  const { t, i18n } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(0);
   
   const carouselWidth = isTablet() ? SCREEN_WIDTH * 0.6 : SCREEN_WIDTH;
@@ -24,7 +30,7 @@ const ImageCarousel = memo(({ images = [], height = 300, onImagePress }) => {
   if (!images || images.length === 0) {
     return (
       <View style={[styles.placeholderContainer, { height }]}>
-        <Ionicons name="image-outline" size={60} color={COLORS.border} />
+        <Ionicons name="image-outline" size={60} color={colors.border} />
       </View>
     );
   }
@@ -79,14 +85,14 @@ const ImageCarousel = memo(({ images = [], height = 300, onImagePress }) => {
   );
 });
 
-const styles = StyleSheet.create({
+const getStyles = (colors, isDark) => StyleSheet.create({
   container: {
     backgroundColor: '#FAFCFB',
     position: 'relative',
   },
   placeholderContainer: {
     width: '100%',
-    backgroundColor: COLORS.backgroundAlt,
+    backgroundColor: colors.backgroundAlt,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -117,7 +123,7 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     width: 16,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   counterContainer: {
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -126,7 +132,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   counterText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: FONT_SIZES.xs,
     fontWeight: 'bold',
   }

@@ -50,6 +50,8 @@ function AppContent() {
   const [downloadProgress, setDownloadProgress] = useState(0);
 
   const handleDownloadAndInstall = async () => {
+  const { colors, isDark } = useTheme();
+  const { t, i18n } = useTranslation();
     try {
       setIsDownloading(true);
 
@@ -212,7 +214,7 @@ function AppContent() {
   if (updateRequired) {
     return (
       <SafeAreaProvider>
-        <View style={{ flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl }}>
+        <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: SPACING.xl }}>
           <Pressable 
             onLongPress={() => {
               setUpdateRequired(false);
@@ -223,22 +225,22 @@ function AppContent() {
           >
             <Text style={{ fontSize: 40 }}>⚙️</Text>
           </Pressable>
-          <Text style={{ fontSize: FONT_SIZES.title, fontWeight: 'bold', color: COLORS.primary, marginBottom: SPACING.md, textAlign: 'center' }}>تحديث إجباري</Text>
-          <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: SPACING.xxl, textAlign: 'center', lineHeight: 24 }}>
+          <Text style={{ fontSize: FONT_SIZES.title, fontWeight: 'bold', color: colors.primary, marginBottom: SPACING.md, textAlign: 'center' }}>تحديث إجباري</Text>
+          <Text style={{ fontSize: FONT_SIZES.md, color: colors.textSecondary, marginBottom: SPACING.xxl, textAlign: 'center', lineHeight: 24 }}>
             تم إطلاق نسخة جديدة من التطبيق. يرجى تحميلها الآن لضمان عمل التطبيق بشكل صحيح.
           </Text>
           <View style={{ width: '100%', overflow: 'hidden', borderRadius: RADIUS.md }}>
             {isDownloading ? (
-              <View style={{ backgroundColor: COLORS.surfaceAlt, paddingVertical: SPACING.md, alignItems: 'center' }}>
-                <Text style={{ color: COLORS.text, fontSize: FONT_SIZES.md, marginBottom: SPACING.sm, fontWeight: 'bold' }}>
+              <View style={{ backgroundColor: colors.surfaceAlt, paddingVertical: SPACING.md, alignItems: 'center' }}>
+                <Text style={{ color: colors.text, fontSize: FONT_SIZES.md, marginBottom: SPACING.sm, fontWeight: 'bold' }}>
                   جاري التنزيل... {Math.round(downloadProgress * 100)}%
                 </Text>
-                <View style={{ width: '90%', height: 6, backgroundColor: COLORS.border, borderRadius: RADIUS.full, overflow: 'hidden' }}>
-                  <View style={{ width: `${downloadProgress * 100}%`, height: '100%', backgroundColor: COLORS.primary }} />
+                <View style={{ width: '90%', height: 6, backgroundColor: colors.border, borderRadius: RADIUS.full, overflow: 'hidden' }}>
+                  <View style={{ width: `${downloadProgress * 100}%`, height: '100%', backgroundColor: colors.primary }} />
                 </View>
               </View>
             ) : (
-              <Pressable onPress={handleDownloadAndInstall} style={{ backgroundColor: COLORS.primary, paddingVertical: SPACING.md, alignItems: 'center' }}>
+              <Pressable onPress={handleDownloadAndInstall} style={{ backgroundColor: colors.primary, paddingVertical: SPACING.md, alignItems: 'center' }}>
                 <Text style={{ color: '#FFF', fontSize: FONT_SIZES.lg, fontWeight: 'bold' }}>تنزيل وتثبيت الآن</Text>
               </Pressable>
             )}

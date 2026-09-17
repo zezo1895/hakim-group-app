@@ -1,4 +1,4 @@
-﻿{
+{
   "search_placeholder": "Search by product name or code...",
   "all_categories": "All",
   "categories": "Categories",
@@ -26,5 +26,13 @@
   "code": "Item Code",
   "refresh": "Refresh Data",
   "sync_success": "Data refreshed successfully",
-  "sync_failed": "Failed to refresh data. Please check your connection."
+  "sync_failed": "Failed to refresh data. Please check your connection.",
+  "all_products": "All Products",
+  "no_products_desc": "Make sure to refresh data or change your search.",
+  "sync_data": "Refresh Data",
+  "size": "Size",
+  "notes": "Notes",
+  "material": "Material",
+  "temperature": "Usage",
+  "category": "Category"
 }

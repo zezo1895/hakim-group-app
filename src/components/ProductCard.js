@@ -1,10 +1,16 @@
 import React, { memo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
 import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CachedImage from './CachedImage';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZES } from '../theme';
 
 const ProductCard = memo(({ product, onPress, width }) => {
+  const { t, i18n } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const { t, i18n } = useTranslation();
   const scaleValue = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -28,9 +34,9 @@ const ProductCard = memo(({ product, onPress, width }) => {
     : product.thumbnail || product.image_url || null;
 
   const getTemperatureText = (temp) => {
-    if (temp === 'hot') return 'ساخن';
-    if (temp === 'cold') return 'بارد';
-    if (temp === 'both') return 'ساخن / بارد';
+    if (temp === 'hot') return t('hot');
+    if (temp === 'cold') return t('cold');
+    if (temp === 'both') return t('hot_cold');
     return '';
   };
 
@@ -50,7 +56,7 @@ const ProductCard = memo(({ product, onPress, width }) => {
             <CachedImage uri={imageUrl} style={styles.image} resizeMode="contain" />
           ) : (
             <View style={styles.fallbackIcon}>
-              <Ionicons name="cube-outline" size={60} color={COLORS.textLight} />
+              <Ionicons name="cube-outline" size={60} color={colors.textLight} />
             </View>
           )}
           
@@ -65,7 +71,7 @@ const ProductCard = memo(({ product, onPress, width }) => {
         {/* Details Area */}
         <View style={styles.detailsContainer}>
           <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
-            {product.name}
+            {i18n.language === 'en' && product.name_en ? product.name_en : product.name}
           </Text>
           <Text style={styles.code}>{product.code}</Text>
           
@@ -92,9 +98,9 @@ const ProductCard = memo(({ product, onPress, width }) => {
   );
 });
 
-const styles = StyleSheet.create({
+const getStyles = (colors, isDark) => StyleSheet.create({
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     ...SHADOWS.medium,
@@ -128,29 +134,29 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     ...SHADOWS.small,
   },
   typeTagText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: FONT_SIZES.xs,
     fontWeight: '700',
   },
   detailsContainer: {
     padding: SPACING.md,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
   },
   name: {
     fontSize: FONT_SIZES.md,
     fontWeight: '700',
-    color: COLORS.text,
+    color: colors.text,
     marginBottom: 4,
     textAlign: 'right',
     lineHeight: 22,
   },
   code: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.textLight,
+    color: colors.textLight,
     marginBottom: SPACING.sm,
     textAlign: 'right',
   },
@@ -177,7 +183,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2EBE5',
   },
   materialBadgeText: {
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   // Temperature Badges
   hotBadge: {
