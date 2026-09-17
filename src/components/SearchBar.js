@@ -24,7 +24,7 @@ export default function SearchBar({ onSearch, onClear, value, placeholder }) {
   const { t, i18n } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
+  
       if (onSearch) {
         onSearch(searchText);
       }

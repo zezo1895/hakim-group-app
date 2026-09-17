@@ -9,7 +9,7 @@ const Sidebar = memo(({ categories = [], activeCategory, onSelectCategory }) => 
   const { t, i18n } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
+  
   const allCategories = [{ id: 'all', name: 'الكل' }, ...categories];
 
   const renderTabletItem = ({ item }) => {

@@ -11,7 +11,7 @@ const SyncProgress = memo(({ progress = 0, message = '', stage = '' }) => {
   const { t, i18n } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
+  
   const animatedProgress = useRef(new Animated.Value(0)).current;
   
   // Circle configuration

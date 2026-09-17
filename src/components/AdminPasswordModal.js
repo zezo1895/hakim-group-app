@@ -9,7 +9,7 @@ const AdminPasswordModal = ({ visible, onClose, onSuccess }) => {
   const { t, i18n } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
+  
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isFocused, setIsFocused] = useState(false);

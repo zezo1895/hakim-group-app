@@ -10,7 +10,7 @@ const ProductCard = memo(({ product, onPress, width }) => {
   const { t, i18n } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
+  
   const scaleValue = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {

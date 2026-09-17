@@ -13,7 +13,7 @@ const ImageCarousel = memo(({ images = [], height = 300, onImagePress }) => {
   const { t, i18n } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
+  
   const [activeIndex, setActiveIndex] = useState(0);
   
   const carouselWidth = isTablet() ? SCREEN_WIDTH * 0.6 : SCREEN_WIDTH;

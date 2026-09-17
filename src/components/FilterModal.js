@@ -55,7 +55,7 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
   const { t, i18n } = useTranslation();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const { t, i18n } = useTranslation();
+  
     onApply(selectedMaterial, selectedTemp, selectedMaterialName);
     onClose();
   };
