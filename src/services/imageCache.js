@@ -8,14 +8,12 @@ const IMAGE_DIR = FileSystem.documentDirectory ? FileSystem.documentDirectory + 
 let memoryImageMap = null;
 
 export const imageCache = {
-  // Ensure the cache directory exists and load memory map
   init: async () => {
-    if (Platform.OS === 'web') return; // FileSystem not supported on web
+    if (Platform.OS === 'web') return; 
     try {
       if (!memoryImageMap) {
         memoryImageMap = (await storage.getImageMap()) || {};
       }
-      
       const dirInfo = await FileSystem.getInfoAsync(IMAGE_DIR);
       if (!dirInfo.exists) {
         await FileSystem.makeDirectoryAsync(IMAGE_DIR, { intermediates: true });
@@ -25,19 +23,18 @@ export const imageCache = {
     }
   },
   
-  // Generate a filename from a URL
   getFilename: (url) => {
     if (!url) return '';
     const parts = url.split('/');
     if (parts.length >= 2) {
       const filename = parts[parts.length - 1].split('?')[0];
       const parentFolder = parts[parts.length - 2];
-      return `${parentFolder}_${filename}`;
+      // Replace illegal characters
+      return `${parentFolder}_${filename}`.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     }
-    return url.split('/').pop().split('?')[0];
+    return url.split('/').pop().split('?')[0].replace(/[^a-zA-Z0-9.\-_]/g, '_');
   },
   
-  // Get local path for a URL (returns null if not cached)
   getLocalPath: (url) => {
     if (!url || Platform.OS === 'web') return null;
     if (memoryImageMap && memoryImageMap[url]) {
@@ -46,7 +43,6 @@ export const imageCache = {
     return null;
   },
   
-  // Download a single image and return local path
   downloadImage: async (url) => {
     if (!url || Platform.OS === 'web') return null;
     try {
@@ -56,22 +52,23 @@ export const imageCache = {
       const info = await FileSystem.getInfoAsync(localUri);
       if (info.exists) return localUri; // Already cached
       
-      const downloadResult = await FileSystem.downloadAsync(url, localUri);
+      // Fix invalid URLs with spaces or Arabic chars
+      const safeUrl = encodeURI(url.trim());
+      
+      const downloadResult = await FileSystem.downloadAsync(safeUrl, localUri);
       if (downloadResult.status === 200) {
         return downloadResult.uri;
       }
       return null;
     } catch (error) {
-      console.error(`Error downloading image ${url}:`, error);
+      console.error(`Error downloading image ${url}:`, error.message);
       return null;
     }
   },
   
-  // Cache all product images, calling onProgress(current, total)
   cacheAllImages: async (products, onProgress) => {
     await imageCache.init();
     
-    // Collect all unique URLs
     const urlsToCache = new Set();
     if (products && Array.isArray(products)) {
       products.forEach(product => {
@@ -88,32 +85,43 @@ export const imageCache = {
     let downloadedCount = 0;
     
     const existingMap = (await storage.getImageMap()) || {};
-    const newMap = { ...existingMap };
+    let newMap = { ...existingMap };
+    let hasChanges = false;
     
     for (const url of urlsArray) {
+      // Fast path: if it's already in the map, just increment and skip download
+      if (newMap[url]) {
+        downloadedCount++;
+        if (onProgress) onProgress(downloadedCount, totalCount);
+        continue;
+      }
+      
       const localPath = await imageCache.downloadImage(url);
       if (localPath) {
         newMap[url] = localPath;
+        memoryImageMap[url] = localPath;
+        hasChanges = true;
       }
+      
       downloadedCount++;
       if (onProgress) {
         onProgress(downloadedCount, totalCount);
       }
+      
+      // Save every 5 images so if app closes, it remembers progress!
+      if (hasChanges && downloadedCount % 5 === 0) {
+        await storage.setImageMap(newMap);
+        hasChanges = false;
+      }
     }
     
-    memoryImageMap = newMap;
-    await storage.setImageMap(newMap);
+    // Final save
+    if (hasChanges) {
+      await storage.setImageMap(newMap);
+    }
     return newMap;
   },
   
-  // Get the URI to use for displaying (local if cached, remote otherwise)
-  getImageUri: (url) => {
-    if (!url) return null;
-    const localPath = imageCache.getLocalPath(url);
-    return localPath || url;
-  },
-  
-  // Clear all cached images
   clearCache: async () => {
     if (Platform.OS === 'web') return;
     try {
@@ -123,6 +131,7 @@ export const imageCache = {
         await imageCache.init();
       }
       await storage.setImageMap({});
+      memoryImageMap = {};
     } catch (error) {
       console.error('Error clearing image cache:', error);
     }

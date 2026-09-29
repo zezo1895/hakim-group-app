@@ -3,17 +3,35 @@ import { storage } from './storage';
 import { imageCache } from './imageCache';
 
 export const syncService = {
-  // Check if we need initial sync (no local data)
+  // Check if we need initial sync (no local data or incomplete image downloads)
   needsInitialSync: async () => {
     const products = await storage.getProducts();
-    return !products || products.length === 0;
+    if (!products || products.length === 0) return true;
+    
+    // Check if images are completely downloaded
+    const imageMap = (await storage.getImageMap()) || {};
+    let isMissingImages = false;
+    
+    // Check up to a reasonable limit to not block thread too long, 
+    // but typically we can check all of them instantly
+    for (const p of products) {
+      if (p.images && p.images.length > 0) {
+        for (const img of p.images) {
+          if (img.url && !imageMap[img.url]) {
+             return true; // Found a missing image! Force sync screen.
+          }
+        }
+      }
+    }
+    
+    return false;
   },
   
   // Full sync: download products, types, categories, and cache images
   // onProgress({ stage: 'data'|'images', current, total, message })
   fullSync: async (onProgress) => {
     try {
-      // 1. Call onProgress with stage 'data' message 'جاري تحميل البيانات...'
+      // 1. Call onProgress with stage 'data'
       if (onProgress) {
         onProgress({ stage: 'data', current: 0, total: 3, message: 'جاري تحميل البيانات...' });
       }
