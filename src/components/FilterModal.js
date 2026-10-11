@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Modal, 
+  TouchableOpacity, 
+  TouchableWithoutFeedback,
+  ScrollView 
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, FONT_SIZES, SHADOWS } from '../theme';
+import { useLanguage } from '../i18n';
 
-const MATERIALS = [
-  { id: 'all', name: 'الكل' },
-  { id: 'بلاستيك', name: 'بلاستيك' },
-  { id: 'ورق', name: 'ورق' },
-  { id: 'فوم', name: 'فوم' },
-  { id: 'بلاستيك ميكرويف', name: 'ميكرويف' },
-  { id: 'قصدير', name: 'قصدير' },
-];
-
-const MATERIAL_NAMES = [
-  { id: 'all', name: 'الكل' },
+const RAW_MATERIAL_NAMES = [
+  { id: 'all', isAll: true },
   { id: 'PP', name: 'PP' },
   { id: 'PS', name: 'PS' },
   { id: 'PET', name: 'PET' },
@@ -24,21 +24,39 @@ const MATERIAL_NAMES = [
   { id: 'فوم عادى', name: 'فوم عادى' },
 ];
 
-const TEMPERATURES = [
-  { id: 'all', name: 'الكل' },
-  { id: 'hot', name: 'ساخن' },
-  { id: 'cold', name: 'بارد' },
-  { id: 'both', name: 'ساخن وبارد' },
-];
+export default function FilterModal({ 
+  visible, 
+  onClose, 
+  initialMaterial, 
+  initialTemp, 
+  initialMaterialName, 
+  onApply, 
+  materialCategories = [] 
+}) {
+  const { t, translateMaterial, isRTL } = useLanguage();
 
-export default function FilterModal({ visible, onClose, initialMaterial, initialTemp, initialMaterialName, onApply, materialCategories = [] }) {
   const [selectedMaterial, setSelectedMaterial] = useState(initialMaterial || 'all');
   const [selectedTemp, setSelectedTemp] = useState(initialTemp || 'all');
   const [selectedMaterialName, setSelectedMaterialName] = useState(initialMaterialName || 'all');
 
   const dynamicMaterials = [
-    { id: 'all', name: 'الكل' },
-    ...materialCategories.map(cat => ({ id: cat.name, name: cat.name }))
+    { id: 'all', name: t('all') },
+    ...materialCategories.map(cat => ({ 
+      id: cat.name, 
+      name: translateMaterial(cat.name) 
+    }))
+  ];
+
+  const materialNamesList = RAW_MATERIAL_NAMES.map(item => ({
+    id: item.id,
+    name: item.isAll ? t('all') : translateMaterial(item.name || item.id)
+  }));
+
+  const temperaturesList = [
+    { id: 'all', name: t('all') },
+    { id: 'hot', name: t('hot') },
+    { id: 'cold', name: t('cold') },
+    { id: 'both', name: t('hotAndCold') },
   ];
 
   useEffect(() => {
@@ -63,7 +81,7 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
   };
 
   const renderChips = (options, selectedValue, onSelect) => (
-    <View style={styles.chipsContainer}>
+    <View style={[styles.chipsContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
       {options.map((option) => {
         const isSelected = selectedValue === option.id;
         return (
@@ -88,37 +106,67 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <View style={styles.modalContent}>
-              <View style={styles.header}>
+              <View style={[styles.header, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                   <Ionicons name="close" size={24} color={COLORS.text} />
                 </TouchableOpacity>
-                <Text style={styles.title}>تصفية المنتجات</Text>
+                <Text style={styles.title}>{t('filterTitle')}</Text>
                 <View style={styles.closeBtn} />
               </View>
 
               <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>الخامة</Text>
+                  <Text style={[
+                    styles.sectionTitle, 
+                    { 
+                      textAlign: isRTL ? 'right' : 'left',
+                      writingDirection: isRTL ? 'rtl' : 'ltr'
+                    }
+                  ]}>
+                    {t('materialCategoryFilter')}
+                  </Text>
                   {renderChips(dynamicMaterials, selectedMaterial, setSelectedMaterial)}
                 </View>
 
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>نوع الخامة</Text>
-                  {renderChips(MATERIAL_NAMES, selectedMaterialName, setSelectedMaterialName)}
+                  <Text style={[
+                    styles.sectionTitle, 
+                    { 
+                      textAlign: isRTL ? 'right' : 'left',
+                      writingDirection: isRTL ? 'rtl' : 'ltr'
+                    }
+                  ]}>
+                    {t('materialNameFilter')}
+                  </Text>
+                  {renderChips(materialNamesList, selectedMaterialName, setSelectedMaterialName)}
                 </View>
 
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>الاستخدام</Text>
-                  {renderChips(TEMPERATURES, selectedTemp, setSelectedTemp)}
+                  <Text style={[
+                    styles.sectionTitle, 
+                    { 
+                      textAlign: isRTL ? 'right' : 'left',
+                      writingDirection: isRTL ? 'rtl' : 'ltr'
+                    }
+                  ]}>
+                    {t('temperatureFilter')}
+                  </Text>
+                  {renderChips(temperaturesList, selectedTemp, setSelectedTemp)}
                 </View>
               </ScrollView>
 
-              <View style={styles.footer}>
-                <TouchableOpacity style={styles.resetBtn} onPress={handleReset}>
-                  <Text style={styles.resetBtnText}>إعادة ضبط</Text>
+              <View style={[styles.footer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                <TouchableOpacity 
+                  style={[
+                    styles.resetBtn, 
+                    isRTL ? { marginLeft: SPACING.md, marginRight: 0 } : { marginRight: SPACING.md, marginLeft: 0 }
+                  ]} 
+                  onPress={handleReset}
+                >
+                  <Text style={styles.resetBtnText}>{t('resetFilter')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.applyBtn} onPress={handleApply}>
-                  <Text style={styles.applyBtnText}>تطبيق الفلتر</Text>
+                  <Text style={styles.applyBtnText}>{t('applyFilter')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -128,9 +176,6 @@ export default function FilterModal({ visible, onClose, initialMaterial, initial
     </Modal>
   );
 }
-
-// Add import ScrollView if needed
-import { ScrollView } from 'react-native';
 
 const styles = StyleSheet.create({
   overlay: {
@@ -146,7 +191,6 @@ const styles = StyleSheet.create({
     ...SHADOWS.large,
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: SPACING.md,
@@ -175,11 +219,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.text,
     marginBottom: SPACING.sm,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   chipsContainer: {
-    flexDirection: 'row-reverse',
     flexWrap: 'wrap',
     gap: SPACING.sm,
   },
@@ -204,7 +245,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   footer: {
-    flexDirection: 'row-reverse',
     padding: SPACING.md,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
@@ -228,7 +268,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: SPACING.md,
   },
   resetBtnText: {
     color: COLORS.textSecondary,

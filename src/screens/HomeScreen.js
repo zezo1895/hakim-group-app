@@ -185,7 +185,7 @@ export default function HomeScreen({ navigation }) {
             ListEmptyComponent={
               !isLoading ? (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>لا توجد منتجات تطابق بحثك</Text>
+                  <Text style={styles.emptyText}>{t('noResults')}</Text>
                 </View>
               ) : null
             }

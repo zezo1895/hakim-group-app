@@ -48,11 +48,16 @@ export function LanguageProvider({ children }) {
     return product[fieldAr] || product[fieldEn] || '';
   };
 
-  // Helper to translate material names (فوم, كرتون, بلاستيك, إلخ)
+  // Helper to translate material names (فوم, كرتون, بلاستيك, ميكرويف, قصدير, إلخ)
   const translateMaterial = (mat) => {
     if (!mat) return '';
     const trimmed = String(mat).trim();
     if (language === 'ar') {
+      if (/absorbent foam/i.test(trimmed)) return 'فوم امتصاص';
+      if (/standard foam/i.test(trimmed)) return 'فوم عادى';
+      if (/microwave plastic/i.test(trimmed)) return 'بلاستيك ميكرويف';
+      if (/microwave/i.test(trimmed)) return 'ميكرويف';
+      if (/foil/i.test(trimmed) || /tin/i.test(trimmed)) return 'قصدير';
       if (/foam/i.test(trimmed)) return 'فوم';
       if (/carton/i.test(trimmed) || /cardboard/i.test(trimmed)) return 'كرتون';
       if (/plastic/i.test(trimmed)) return 'بلاستيك';
@@ -61,6 +66,11 @@ export function LanguageProvider({ children }) {
       if (/kraft/i.test(trimmed)) return 'كرافت';
       return trimmed;
     } else {
+      if (trimmed === 'بلاستيك ميكرويف') return 'Microwave Plastic';
+      if (trimmed === 'ميكرويف') return 'Microwave';
+      if (trimmed === 'قصدير') return 'Foil';
+      if (trimmed === 'فوم امتصاص') return 'Absorbent Foam';
+      if (trimmed === 'فوم عادى') return 'Standard Foam';
       if (trimmed.includes('فوم')) return 'Foam';
       if (trimmed.includes('كرتون')) return 'Carton';
       if (trimmed.includes('بلاستيك')) return 'Plastic';

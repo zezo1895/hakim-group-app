@@ -48,11 +48,11 @@ export default {
   
   // Filter Modal
   filterTitle: 'تصفية المنتجات',
-  materialCategoryFilter: 'فئة الخامة',
-  temperatureFilter: 'درجة الحرارة',
-  materialNameFilter: 'اسم الخامة',
-  applyFilter: 'تطبيق',
-  resetFilter: 'إعادة تعيين',
+  materialCategoryFilter: 'الخامة',
+  temperatureFilter: 'الاستخدام',
+  materialNameFilter: 'نوع الخامة',
+  applyFilter: 'تطبيق الفلتر',
+  resetFilter: 'إعادة ضبط',
   
   // Admin
   adminTitle: 'لوحة التحكم',

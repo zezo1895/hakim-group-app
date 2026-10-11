@@ -43,10 +43,10 @@ export default {
   dataNotAvailable: 'Data not available',
   
   filterTitle: 'Filter Products',
-  materialCategoryFilter: 'Material Category',
-  temperatureFilter: 'Temperature',
-  materialNameFilter: 'Material Name',
-  applyFilter: 'Apply',
+  materialCategoryFilter: 'Material',
+  temperatureFilter: 'Usage',
+  materialNameFilter: 'Material Type',
+  applyFilter: 'Apply Filter',
   resetFilter: 'Reset',
   
   adminTitle: 'Control Panel',
