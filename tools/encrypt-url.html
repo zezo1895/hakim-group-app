@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hakim Group - إدارة وتشفير رابط الخادم</title>
+  <style>
+    :root {
+      --primary: #1B7A3D;
+      --primary-light: #2E9B4E;
+      --primary-dark: #0F5A2A;
+      --bg: #FAFCFB;
+      --surface: #FFFFFF;
+      --text: #1C2822;
+      --text-secondary: #62776A;
+      --border: #E8EFEA;
+      --radius: 12px;
+      --shadow: 0 4px 16px rgba(27, 122, 61, 0.08);
+      --info-bg: #E8F5E9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      max-width: 650px;
+      width: 100%;
+      padding: 32px;
+    }
+
+    .header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--info-bg);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 22px;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .info-banner {
+      background: #F4FBF7;
+      border: 1px solid #C8E6C9;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+
+    .info-banner-title {
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 4px;
+    }
+
+    .current-url-display {
+      font-family: monospace;
+      color: var(--primary);
+      direction: ltr;
+      text-align: left;
+      word-break: break-all;
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #D7ECD9;
+      margin-top: 6px;
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+      text-align: right;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      direction: ltr;
+      text-align: left;
+      font-family: monospace;
+      background: #F9FBFA;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(27, 122, 61, 0.15);
+      background: #FFFFFF;
+    }
+
+    .key-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    button.btn-primary {
+      width: 100%;
+      background: var(--primary);
+      color: #FFFFFF;
+      border: none;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 6px;
+      margin-bottom: 20px;
+    }
+
+    button.btn-primary:hover {
+      background: var(--primary-light);
+    }
+
+    .output-section {
+      background: #F0F4F2;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 10px;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .output-header span {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--primary-dark);
+    }
+
+    .btn-copy {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: var(--primary-dark);
+    }
+
+    .json-preview {
+      margin-top: 10px;
+      background: #1C2822;
+      color: #7FE5A2;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 12px;
+      direction: ltr;
+      text-align: left;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .instructions {
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .instructions ol {
+      padding-right: 20px;
+      margin-top: 8px;
+    }
+
+    .toast {
+      color: var(--primary);
+      font-size: 12px;
+      margin-top: 6px;
+      display: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="badge">Hakim Group - Config Manager</span>
+      <h1>إدارة وتشفير رابط الخادم (API URL)</h1>
+      <p class="subtitle">تشفير رابط الخادم تمهيداً لحفظه في config.json دون كشف الرابط الحقيقي في GitHub.</p>
+    </div>
+
+    <!-- عرض الرابط الحالي / القديم -->
+    <div class="info-banner">
+      <div class="info-banner-title">📌 الرابط الحالي المعتمد (القديم):</div>
+      <code class="current-url-display" id="currentUrlDisplay">https://hakim-production-5171.up.railway.app/api</code>
+    </div>
+
+    <div class="form-group">
+      <label for="urlInput">رابط الخادم الجديد (API URL):</label>
+      <input type="text" id="urlInput" placeholder="https://new-domain.com/api" value="https://hakim-production-5171.up.railway.app/api" />
+    </div>
+
+    <div class="form-group">
+      <label for="secretKeyInput">مفتاح التشفير السري (Secret Key):</label>
+      <input type="text" id="secretKeyInput" value="HakimGroup2026SecretKey" />
+      <div class="key-note">المفتاح السري موجود ومثبت في التطبيق ولا يتم رفعه إلى GitHub.</div>
+    </div>
+
+    <button type="button" class="btn-primary" onclick="handleEncrypt()">تشفير الرابط وإنشاء كود config.json</button>
+
+    <div class="output-section">
+      <div class="output-header">
+        <span>محتوى ملف config.json الجاهز لـ GitHub:</span>
+        <button type="button" class="btn-copy" onclick="copyConfigJson()">نسخ المحتوى</button>
+      </div>
+      <div class="json-preview" id="jsonPreview"></div>
+      <div id="copyToast" class="toast">✓ تم نسخ محتوى config.json بنجاح!</div>
+    </div>
+
+    <div class="instructions">
+      <strong>طريقة الاستخدام:</strong>
+      <ol>
+        <li>انسخ الكود الناتج وضعه داخل ملف <code>config.json</code> في GitHub.</li>
+        <li>في GitHub لن يظهر الرابط الأصلي ولا المفتاح السري، فقط يظهر النص المشفر <code>payload</code>.</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    function encrypt(text, key) {
+      if (!text || !key) return '';
+      let xorChars = '';
+      for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+        xorChars += String.fromCharCode(code);
+      }
+      return btoa(xorChars);
+    }
+
+    function handleEncrypt() {
+      const url = document.getElementById('urlInput').value.trim();
+      const key = document.getElementById('secretKeyInput').value.trim();
+      if (!url) {
+        alert('يرجى كتابة الرابط أولاً');
+        return;
+      }
+      if (!key) {
+        alert('يرجى التأكد من كتابة المفتاح السري');
+        return;
+      }
+      try {
+        const payload = encrypt(url, key);
+        const configObj = {
+          v: 1,
+          payload: payload
+        };
+        document.getElementById('jsonPreview').textContent = JSON.stringify(configObj, null, 2);
+      } catch (err) {
+        alert('حدث خطأ أثناء التشفير: ' + err.message);
+      }
+    }
+
+    function copyConfigJson() {
+      const content = document.getElementById('jsonPreview').textContent;
+      if (!content) return;
+      navigator.clipboard.writeText(content).then(() => {
+        const toast = document.getElementById('copyToast');
+        toast.style.display = 'block';
+        setTimeout(() => {
+          toast.style.display = 'none';
+        }, 2500);
+      }).catch(err => {
+        alert('تعذر النسخ: ' + err);
+      });
+    }
+
+    // تشفير القيمة المبدئية عند التحميل
+    window.addEventListener('DOMContentLoaded', handleEncrypt);
+  </script>
+</body>
+</html>
