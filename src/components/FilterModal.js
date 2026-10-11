@@ -12,17 +12,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, FONT_SIZES, SHADOWS } from '../theme';
 import { useLanguage } from '../i18n';
 
-const RAW_MATERIAL_NAMES = [
-  { id: 'all', isAll: true },
-  { id: 'PP', name: 'PP' },
-  { id: 'PS', name: 'PS' },
-  { id: 'PET', name: 'PET' },
-  { id: 'K-RESIN', name: 'K-RESIN' },
-  { id: 'كرافت', name: 'كرافت' },
-  { id: 'ورق', name: 'ورق' },
-  { id: 'فوم امتصاص', name: 'فوم امتصاص' },
-  { id: 'فوم عادى', name: 'فوم عادى' },
-];
+// Mapping of main material category to its specific sub-materials
+const CATEGORY_MATERIALS_MAP = {
+  'بلاستيك': ['PP', 'PS', 'PET', 'K-RESIN'],
+  'فوم': ['فوم امتصاص', 'فوم عادى'],
+  'كرتون': ['ورق', 'كرافت'],
+};
 
 export default function FilterModal({ 
   visible, 
@@ -39,18 +34,28 @@ export default function FilterModal({
   const [selectedTemp, setSelectedTemp] = useState(initialTemp || 'all');
   const [selectedMaterialName, setSelectedMaterialName] = useState(initialMaterialName || 'all');
 
-  const dynamicMaterials = [
+  // Build clean main categories list: الكل, بلاستيك, فوم, كرتون
+  const categoriesList = [
     { id: 'all', name: t('all') },
-    ...materialCategories.map(cat => ({ 
-      id: cat.name, 
-      name: translateMaterial(cat.name) 
-    }))
+    { id: 'بلاستيك', name: translateMaterial('بلاستيك') },
+    { id: 'فوم', name: translateMaterial('فوم') },
+    { id: 'كرتون', name: translateMaterial('كرتون') },
   ];
 
-  const materialNamesList = RAW_MATERIAL_NAMES.map(item => ({
-    id: item.id,
-    name: item.isAll ? t('all') : translateMaterial(item.name || item.id)
-  }));
+  // Dynamically compute sub-materials based on selected main category
+  const getSubMaterials = () => {
+    const rawList = (selectedMaterial !== 'all' && CATEGORY_MATERIALS_MAP[selectedMaterial])
+      ? CATEGORY_MATERIALS_MAP[selectedMaterial]
+      : ['PP', 'PS', 'PET', 'K-RESIN', 'ورق', 'كرافت', 'فوم امتصاص', 'فوم عادى'];
+
+    return [
+      { id: 'all', name: t('all') },
+      ...rawList.map(mat => ({
+        id: mat,
+        name: translateMaterial(mat)
+      }))
+    ];
+  };
 
   const temperaturesList = [
     { id: 'all', name: t('all') },
@@ -66,6 +71,17 @@ export default function FilterModal({
       setSelectedMaterialName(initialMaterialName || 'all');
     }
   }, [visible, initialMaterial, initialTemp, initialMaterialName]);
+
+  const handleSelectMaterial = (materialId) => {
+    setSelectedMaterial(materialId);
+    // If selecting a category, reset sub-material if not applicable
+    if (materialId !== 'all') {
+      const allowed = CATEGORY_MATERIALS_MAP[materialId] || [];
+      if (!allowed.includes(selectedMaterialName)) {
+        setSelectedMaterialName('all');
+      }
+    }
+  };
 
   const handleApply = () => {
     onApply(selectedMaterial, selectedTemp, selectedMaterialName);
@@ -115,6 +131,7 @@ export default function FilterModal({
               </View>
 
               <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
+                {/* 1. Main Category: بلاستيك / فوم / كرتون */}
                 <View style={styles.section}>
                   <Text style={[
                     styles.sectionTitle, 
@@ -125,9 +142,10 @@ export default function FilterModal({
                   ]}>
                     {t('materialCategoryFilter')}
                   </Text>
-                  {renderChips(dynamicMaterials, selectedMaterial, setSelectedMaterial)}
+                  {renderChips(categoriesList, selectedMaterial, handleSelectMaterial)}
                 </View>
 
+                {/* 2. Sub-material type: PP, PS, PET, K-RESIN when Plastic is chosen */}
                 <View style={styles.section}>
                   <Text style={[
                     styles.sectionTitle, 
@@ -138,9 +156,10 @@ export default function FilterModal({
                   ]}>
                     {t('materialNameFilter')}
                   </Text>
-                  {renderChips(materialNamesList, selectedMaterialName, setSelectedMaterialName)}
+                  {renderChips(getSubMaterials(), selectedMaterialName, setSelectedMaterialName)}
                 </View>
 
+                {/* 3. Usage / Temperature: ساخن / بارد / ساخن وبارد */}
                 <View style={styles.section}>
                   <Text style={[
                     styles.sectionTitle, 
