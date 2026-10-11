@@ -1,18 +1,20 @@
 import { getApiUrl, FALLBACK_API_URL } from '../services/remoteConfig';
 
-let currentBaseUrl = FALLBACK_API_URL;
+// Cache the resolved URL in memory after first call
+let _cachedUrl = null;
 
-// Initialize base URL in memory
-getApiUrl().then((url) => {
-  if (url) currentBaseUrl = url;
-}).catch(() => {});
-
-export const getBaseUrl = async () => {
+const getBaseUrl = async () => {
+  if (_cachedUrl) return _cachedUrl;
   try {
-    currentBaseUrl = await getApiUrl();
-  } catch (e) {}
-  return currentBaseUrl;
+    _cachedUrl = await getApiUrl();
+  } catch (e) {
+    _cachedUrl = FALLBACK_API_URL;
+  }
+  return _cachedUrl;
 };
+
+// Allow resetting cached URL (e.g., after remote config update)
+export const resetApiUrlCache = () => { _cachedUrl = null; };
 
 export const api = {
   // GET /api/app-version - returns { latestVersion, downloadUrl, forceUpdate }
@@ -77,7 +79,7 @@ export const api = {
     try {
       const baseUrl = await getBaseUrl();
       const response = await fetch(`${baseUrl}/products`);
-      if (!response.ok) throw new Error('فشل جلب المنتجات');
+      if (!response.ok) throw new Error('Failed to fetch products');
       return await response.json();
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -90,7 +92,7 @@ export const api = {
     try {
       const baseUrl = await getBaseUrl();
       const response = await fetch(`${baseUrl}/products/types`);
-      if (!response.ok) throw new Error('فشل جلب أنواع المنتجات');
+      if (!response.ok) throw new Error('Failed to fetch product types');
       return await response.json();
     } catch (error) {
       console.error('Error fetching product types:', error);
@@ -103,7 +105,7 @@ export const api = {
     try {
       const baseUrl = await getBaseUrl();
       const response = await fetch(`${baseUrl}/products/material-categories`);
-      if (!response.ok) throw new Error('فشل جلب فئات المواد');
+      if (!response.ok) throw new Error('Failed to fetch material categories');
       return await response.json();
     } catch (error) {
       console.error('Error fetching material categories:', error);
@@ -116,7 +118,7 @@ export const api = {
     try {
       const baseUrl = await getBaseUrl();
       const response = await fetch(`${baseUrl}/products/${id}`);
-      if (!response.ok) throw new Error('فشل جلب تفاصيل المنتج');
+      if (!response.ok) throw new Error('Failed to fetch product details');
       return await response.json();
     } catch (error) {
       console.error(`Error fetching product ${id}:`, error);
@@ -129,7 +131,7 @@ export const api = {
     try {
       const baseUrl = await getBaseUrl();
       const response = await fetch(`${baseUrl}/products/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('فشل البحث عن المنتجات');
+      if (!response.ok) throw new Error('Failed to search products');
       return await response.json();
     } catch (error) {
       console.error('Error searching products:', error);
@@ -146,7 +148,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       });
-      if (!response.ok) throw new Error('فشل تسجيل البحث');
+      if (!response.ok) throw new Error('Failed to log search');
       return await response.json();
     } catch (error) {
       console.error('Error logging search:', error);
@@ -161,7 +163,7 @@ export const api = {
       const response = await fetch(`${baseUrl}/products/${id}/view`, {
         method: 'POST',
       });
-      if (!response.ok) throw new Error('فشل تسجيل المشاهدة');
+      if (!response.ok) throw new Error('Failed to increment view');
       return await response.json();
     } catch (error) {
       console.error('Error incrementing view:', error);
@@ -169,7 +171,7 @@ export const api = {
     }
   },
   
-  // GET /api/products/analytics (needs header x-admin-secret: 123456)
+  // GET /api/products/analytics (needs header x-admin-secret)
   getAnalytics: async () => {
     try {
       const baseUrl = await getBaseUrl();
@@ -177,10 +179,9 @@ export const api = {
         headers: { 'x-admin-secret': '1832003Ziad$$z' },
       });
       if (!response.ok) {
-        // السطرين دول هيطبعوا كود الخطأ والرسالة اللي راجعة من السيرفر بالظبط
         const errorText = await response.text();
         console.error('Server error details:', response.status, errorText);
-        throw new Error('فشل جلب التحليلات');
+        throw new Error('Failed to fetch analytics');
       }
       return await response.json();
     } catch (error) {
