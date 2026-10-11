@@ -12,6 +12,8 @@ import ProductCard from '../components/ProductCard';
 import SyncProgress from '../components/SyncProgress';
 import AdminPasswordModal from '../components/AdminPasswordModal';
 import FilterModal from '../components/FilterModal';
+import LanguageToggle from '../components/LanguageToggle';
+import { useLanguage } from '../i18n';
 
 import { useProducts } from '../hooks/useProducts';
 import { syncService } from '../services/syncService';
@@ -36,6 +38,8 @@ export default function HomeScreen({ navigation }) {
     activeTemp,
     searchQuery
   } = useProducts();
+
+  const { t, isRTL } = useLanguage();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -107,25 +111,31 @@ export default function HomeScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Pressable 
-            onPressIn={handleLogoPressIn}
-            onPressOut={handleLogoPressOut}
-          >
-            <Animated.Image 
-              entering={ZoomIn.duration(1000).springify()}
-              source={require('../../assets/app-icon.png')} 
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </Pressable>
+        <View style={styles.topBarRow}>
+          <View style={{ width: 68 }} />
+          <View style={styles.logoContainer}>
+            <Pressable 
+              onPressIn={handleLogoPressIn}
+              onPressOut={handleLogoPressOut}
+            >
+              <Animated.Image 
+                entering={ZoomIn.duration(1000).springify()}
+                source={require('../../assets/app-icon.png')} 
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </Pressable>
+          </View>
+          <View style={styles.languageContainer}>
+            <LanguageToggle />
+          </View>
         </View>
         <View style={styles.searchRow}>
           <View style={styles.searchContainer}>
             <SearchBar 
               value={searchQuery}
               onSearch={handleSearch}
-              placeholder="ابحث عن منتج..."
+              placeholder={t('searchPlaceholder')}
             />
           </View>
           <TouchableOpacity 
@@ -137,7 +147,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={[styles.mainContainer, { flexDirection: tablet ? 'row' : 'column' }]}>
+      <View style={[styles.mainContainer, { flexDirection: tablet ? (isRTL ? 'row' : 'row-reverse') : 'column' }]}>
         <Sidebar 
           categories={productTypes}
           activeCategory={activeCategory}
@@ -217,9 +227,17 @@ const styles = StyleSheet.create({
     elevation: 4,
     zIndex: 10, // Ensure shadow casts over list
   },
+  topBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.sm,
+  },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: SPACING.sm,
+  },
+  languageContainer: {
+    alignItems: 'flex-end',
   },
   logo: {
     height: 44, // Slightly larger for premium feel

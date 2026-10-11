@@ -15,6 +15,8 @@ import SyncProgressComponent from './src/components/SyncProgress';
 import { syncService } from './src/services/syncService';
 import { imageCache } from './src/services/imageCache';
 import { api } from './src/api/client';
+import { initRemoteConfig } from './src/services/remoteConfig';
+import { LanguageProvider } from './src/i18n';
 import { COLORS, SPACING, RADIUS, FONT_SIZES } from './src/theme';
 
 // Force RTL
@@ -116,6 +118,13 @@ export default function App() {
 
   async function prepare() {
     try {
+      // 1. Fetch remote encrypted config from GitHub first
+      try {
+        await initRemoteConfig();
+      } catch (e) {
+        console.log('Remote config init failed, using cache/fallback', e);
+      }
+
       if (imageCache && imageCache.init) {
         await imageCache.init();
       }
@@ -244,14 +253,16 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="dark" backgroundColor="#FFFFFF" />
-        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_left' }}>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-          <Stack.Screen name="Admin" component={AdminScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <LanguageProvider>
+        <NavigationContainer>
+          <StatusBar style="dark" backgroundColor="#FFFFFF" />
+          <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_left' }}>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+            <Stack.Screen name="Admin" component={AdminScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

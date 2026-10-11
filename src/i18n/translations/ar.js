@@ -77,9 +77,14 @@ export default {
   clearCache: 'مسح الذاكرة المؤقتة',
   apiSettings: 'إعدادات الخادم',
   currentApiUrl: 'رابط الخادم الحالي',
-  changeApiUrl: 'تغيير رابط الخادم',
-  newApiUrl: 'الرابط الجديد',
-  
+  // Materials
+  foam: 'فوم',
+  carton: 'كرتون',
+  plastic: 'بلاستيك',
+  paper: 'ورق',
+  aluminum: 'ألومنيوم',
+  kraft: 'كرافت',
+
   // Language
   language: 'اللغة',
   arabic: 'العربية',

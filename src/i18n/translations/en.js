@@ -73,6 +73,14 @@ export default {
   currentApiUrl: 'Current Server URL',
   changeApiUrl: 'Change Server URL',
   newApiUrl: 'New URL',
+
+  // Materials
+  foam: 'Foam',
+  carton: 'Carton',
+  plastic: 'Plastic',
+  paper: 'Paper',
+  aluminum: 'Aluminum',
+  kraft: 'Kraft',
   
   language: 'Language',
   arabic: 'العربية',

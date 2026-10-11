@@ -1,25 +1,23 @@
-import React, { useState, memo } from 'react';
-import { View, ScrollView, StyleSheet, Dimensions, Text, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, memo } from 'react';
+import { View, FlatList, StyleSheet, Dimensions, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CachedImage from './CachedImage';
-import { COLORS, SPACING, RADIUS, FONT_SIZES } from '../theme';
-import { isTablet } from '../utils/responsive';
+import { COLORS, SPACING, RADIUS, FONT_SIZES, SHADOWS } from '../theme';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const ImageCarousel = memo(({ images = [], height = 300, onImagePress }) => {
+const ImageCarousel = memo(({ images = [], height = 320, onImagePress }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  
-  const carouselWidth = isTablet() ? SCREEN_WIDTH * 0.6 : SCREEN_WIDTH;
+  const [layoutWidth, setLayoutWidth] = useState(Dimensions.get('window').width);
+  const flatListRef = useRef(null);
 
-  const handleScroll = (event) => {
-    const slideSize = event.nativeEvent.layoutMeasurement.width;
-    const index = event.nativeEvent.contentOffset.x / slideSize;
-    const roundIndex = Math.round(index);
-    if (roundIndex !== activeIndex) {
-      setActiveIndex(roundIndex);
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems && viewableItems.length > 0 && viewableItems[0].index !== null) {
+      setActiveIndex(viewableItems[0].index);
     }
-  };
+  }).current;
+
+  const viewabilityConfig = useRef({
+    viewAreaCoveragePercentThreshold: 50,
+  }).current;
 
   if (!images || images.length === 0) {
     return (
@@ -30,45 +28,62 @@ const ImageCarousel = memo(({ images = [], height = 300, onImagePress }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView
+    <View 
+      style={[styles.container, { height }]}
+      onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
+    >
+      <FlatList
+        ref={flatListRef}
+        data={images}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        contentContainerStyle={{ width: carouselWidth * images.length }}
-      >
-        {images.map((img, index) => (
-          <TouchableOpacity 
-            key={index} 
-            activeOpacity={0.9}
-            style={{ width: carouselWidth, height }}
-            onPress={() => onImagePress && onImagePress(img.url, index)}
+        keyExtractor={(_, index) => index.toString()}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        initialNumToRender={1}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        getItemLayout={(_, index) => ({
+          length: layoutWidth,
+          offset: layoutWidth * index,
+          index,
+        })}
+        renderItem={({ item, index }) => (
+          <TouchableOpacity
+            activeOpacity={0.95}
+            style={[styles.slide, { width: layoutWidth, height }]}
+            onPress={() => onImagePress && onImagePress(item.url, index)}
           >
-            <CachedImage 
-              uri={img.url} 
-              style={styles.image} 
-              resizeMode="contain" 
+            <CachedImage
+              uri={item.url}
+              style={styles.image}
+              resizeMode="contain"
             />
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+        )}
+      />
 
       {images.length > 1 && (
         <View style={styles.indicatorContainer}>
-          <View style={styles.dotsContainer}>
-            {images.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  index === activeIndex && styles.activeDot
-                ]}
-              />
-            ))}
+          {/* Elegant modern pill dots */}
+          <View style={styles.dotsPill}>
+            {images.map((_, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <View
+                  key={index}
+                  style={[
+                    styles.dot,
+                    isActive && styles.activeDot
+                  ]}
+                />
+              );
+            })}
           </View>
-          <View style={styles.counterContainer}>
+
+          {/* Floating counter badge */}
+          <View style={styles.counterBadge}>
             <Text style={styles.counterText}>
               {activeIndex + 1} / {images.length}
             </Text>
@@ -81,14 +96,20 @@ const ImageCarousel = memo(({ images = [], height = 300, onImagePress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FAFCFB',
+    backgroundColor: '#F8FAF9',
     position: 'relative',
+    overflow: 'hidden',
   },
   placeholderContainer: {
     width: '100%',
-    backgroundColor: COLORS.backgroundAlt,
+    backgroundColor: '#F0F4F2',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  slide: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAF9',
   },
   image: {
     width: '100%',
@@ -96,40 +117,48 @@ const styles = StyleSheet.create({
   },
   indicatorContainer: {
     position: 'absolute',
-    bottom: SPACING.xl, // Lifted for overlap effect
-    left: 0,
-    right: 0,
+    bottom: 42, // Positioned safely above the overlapping detail sheet
+    left: SPACING.lg,
+    right: SPACING.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: SPACING.md,
+    pointerEvents: 'none',
   },
-  dotsContainer: {
-    flexDirection: 'row-reverse',
+  dotsPill: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.full,
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(27, 122, 61, 0.2)', // Light Hakim green
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
     marginHorizontal: 3,
   },
   activeDot: {
-    width: 16,
-    backgroundColor: COLORS.primary,
+    width: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 4,
   },
-  counterContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: RADIUS.sm,
+  counterBadge: {
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.full,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   counterText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.xs,
-    fontWeight: 'bold',
-  }
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
 });
 
 export default ImageCarousel;

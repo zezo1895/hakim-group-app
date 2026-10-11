@@ -1,10 +1,25 @@
-const BASE_URL = 'https://hakim-production-5171.up.railway.app/api';
+import { getApiUrl, FALLBACK_API_URL } from '../services/remoteConfig';
+
+let currentBaseUrl = FALLBACK_API_URL;
+
+// Initialize base URL in memory
+getApiUrl().then((url) => {
+  if (url) currentBaseUrl = url;
+}).catch(() => {});
+
+export const getBaseUrl = async () => {
+  try {
+    currentBaseUrl = await getApiUrl();
+  } catch (e) {}
+  return currentBaseUrl;
+};
 
 export const api = {
   // GET /api/app-version - returns { latestVersion, downloadUrl, forceUpdate }
   checkAppVersion: async () => {
     try {
-      const response = await fetch(`${BASE_URL}/app-version`);
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/app-version`);
       if (!response.ok) return null;
       return await response.json();
     } catch (error) {
@@ -16,7 +31,8 @@ export const api = {
   // POST /api/app-version/request-update
   requestAppUpdate: async (downloadUrl, adminSecret) => {
     try {
-      const response = await fetch(`${BASE_URL}/app-version/request-update`, {
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/app-version/request-update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,7 +53,8 @@ export const api = {
   // POST /api/app-version/confirm-update
   confirmAppUpdate: async (otp, adminSecret) => {
     try {
-      const response = await fetch(`${BASE_URL}/app-version/confirm-update`, {
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/app-version/confirm-update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,7 +75,8 @@ export const api = {
   // GET /api/products - returns array of products with images
   getProducts: async () => {
     try {
-      const response = await fetch(`${BASE_URL}/products`);
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/products`);
       if (!response.ok) throw new Error('فشل جلب المنتجات');
       return await response.json();
     } catch (error) {
@@ -70,7 +88,8 @@ export const api = {
   // GET /api/products/types - returns [{id, name}]
   getProductTypes: async () => {
     try {
-      const response = await fetch(`${BASE_URL}/products/types`);
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/products/types`);
       if (!response.ok) throw new Error('فشل جلب أنواع المنتجات');
       return await response.json();
     } catch (error) {
@@ -82,7 +101,8 @@ export const api = {
   // GET /api/products/material-categories - returns [{id, name}]
   getMaterialCategories: async () => {
     try {
-      const response = await fetch(`${BASE_URL}/products/material-categories`);
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/products/material-categories`);
       if (!response.ok) throw new Error('فشل جلب فئات المواد');
       return await response.json();
     } catch (error) {
@@ -94,7 +114,8 @@ export const api = {
   // GET /api/products/:id - returns product with lids, siblings
   getProduct: async (id) => {
     try {
-      const response = await fetch(`${BASE_URL}/products/${id}`);
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/products/${id}`);
       if (!response.ok) throw new Error('فشل جلب تفاصيل المنتج');
       return await response.json();
     } catch (error) {
@@ -106,7 +127,8 @@ export const api = {
   // GET /api/products/search?q= - returns search results (max 12)
   searchProducts: async (query) => {
     try {
-      const response = await fetch(`${BASE_URL}/products/search?q=${encodeURIComponent(query)}`);
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/products/search?q=${encodeURIComponent(query)}`);
       if (!response.ok) throw new Error('فشل البحث عن المنتجات');
       return await response.json();
     } catch (error) {
@@ -118,7 +140,8 @@ export const api = {
   // POST /api/products/analytics/search - log search query
   logSearch: async (query) => {
     try {
-      const response = await fetch(`${BASE_URL}/products/analytics/search`, {
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/products/analytics/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
@@ -134,7 +157,8 @@ export const api = {
   // POST /api/products/:id/view - increment view
   incrementView: async (id) => {
     try {
-      const response = await fetch(`${BASE_URL}/products/${id}/view`, {
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/products/${id}/view`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error('فشل تسجيل المشاهدة');
@@ -148,7 +172,8 @@ export const api = {
   // GET /api/products/analytics (needs header x-admin-secret: 123456)
   getAnalytics: async () => {
     try {
-      const response = await fetch(`${BASE_URL}/products/analytics`, {
+      const baseUrl = await getBaseUrl();
+      const response = await fetch(`${baseUrl}/products/analytics`, {
         headers: { 'x-admin-secret': '1832003Ziad$$z' },
       });
       if (!response.ok) {

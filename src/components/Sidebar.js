@@ -2,9 +2,14 @@ import React, { memo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZES } from '../theme';
 import { isTablet } from '../utils/responsive';
+import { useLanguage } from '../i18n';
 
 const Sidebar = memo(({ categories = [], activeCategory, onSelectCategory }) => {
-  const allCategories = [{ id: 'all', name: 'الكل' }, ...categories];
+  const { t, language, translateCategory } = useLanguage();
+  const allCategories = [{ id: 'all', name: t('all') }, ...categories.map(c => ({
+    ...c,
+    name: (language === 'en' && c.name_en) ? c.name_en : translateCategory(c.name)
+  }))];
 
   const renderTabletItem = ({ item }) => {
     const isActive = activeCategory === item.id;
@@ -40,7 +45,7 @@ const Sidebar = memo(({ categories = [], activeCategory, onSelectCategory }) => 
     return (
       <View style={styles.tabletContainer}>
         <View style={styles.tabletHeader}>
-          <Text style={styles.tabletHeaderText}>الأقسام</Text>
+          <Text style={styles.tabletHeaderText}>{t('categories')}</Text>
         </View>
         <FlatList
           data={allCategories}

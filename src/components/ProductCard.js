@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated } from 'reac
 import { Ionicons } from '@expo/vector-icons';
 import CachedImage from './CachedImage';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZES } from '../theme';
+import { useLanguage } from '../i18n';
 
 const ProductCard = memo(({ product, onPress, width }) => {
+  const { t, getProductField, translateMaterial } = useLanguage();
   const scaleValue = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -28,13 +30,15 @@ const ProductCard = memo(({ product, onPress, width }) => {
     : product.thumbnail || product.image_url || null;
 
   const getTemperatureText = (temp) => {
-    if (temp === 'hot') return 'ساخن';
-    if (temp === 'cold') return 'بارد';
-    if (temp === 'both') return 'ساخن / بارد';
+    if (temp === 'hot') return t('hot');
+    if (temp === 'cold') return t('cold');
+    if (temp === 'both') return t('hotAndCold');
     return '';
   };
 
   const tempText = getTemperatureText(product.temp);
+  const productName = getProductField(product, 'name', 'name_en');
+  const typeName = getProductField(product, 'type_name', 'type_name_en');
 
   return (
     <TouchableWithoutFeedback
@@ -55,17 +59,17 @@ const ProductCard = memo(({ product, onPress, width }) => {
           )}
           
           {/* Type Badge Floating */}
-          {product.type_name && (
+          {typeName ? (
             <View style={styles.typeTag}>
-              <Text style={styles.typeTagText}>{product.type_name}</Text>
+              <Text style={styles.typeTagText}>{typeName}</Text>
             </View>
-          )}
+          ) : null}
         </View>
         
         {/* Details Area */}
         <View style={styles.detailsContainer}>
           <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
-            {product.name}
+            {productName}
           </Text>
           <Text style={styles.code}>{product.code}</Text>
           
@@ -73,7 +77,9 @@ const ProductCard = memo(({ product, onPress, width }) => {
           <View style={styles.badgesRow}>
             {product.material_category && (
               <View style={[styles.badge, styles.materialBadge]}>
-                <Text style={[styles.badgeText, styles.materialBadgeText]}>{product.material_category}</Text>
+                <Text style={[styles.badgeText, styles.materialBadgeText]}>
+                  {translateMaterial(product.material_category)}
+                </Text>
               </View>
             )}
             

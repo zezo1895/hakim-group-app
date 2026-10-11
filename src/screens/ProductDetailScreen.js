@@ -9,9 +9,11 @@ import { syncService } from '../services/syncService';
 import ProductCard from '../components/ProductCard';
 import ImageCarousel from '../components/ImageCarousel';
 import CachedImage from '../components/CachedImage';
+import { useLanguage } from '../i18n';
 
 export default function ProductDetailScreen({ route, navigation }) {
   const { productId, productName } = route.params;
+  const { t, getProductField, translateMaterial, translateSize, isRTL } = useLanguage();
   const tablet = isTablet();
 
   const [product, setProduct] = useState(null);
@@ -61,34 +63,37 @@ export default function ProductDetailScreen({ route, navigation }) {
     fetchProductDetails();
   }, [productId]);
 
-  const carouselHeight = tablet ? 400 : 300;
+  const windowDim = Dimensions.get('window');
+  const carouselHeight = Math.min(Math.max(windowDim.height * 0.48, 360), 550);
+
+  const currentProductName = product ? getProductField(product, 'name', 'name_en') : productName;
 
   const renderHeader = () => (
-    <View style={styles.header}>
+    <View style={[styles.header, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
       <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+        <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={24} color={COLORS.primary} />
       </Pressable>
-      <Text style={styles.headerTitle} numberOfLines={1}>{productName}</Text>
-      <View style={styles.backButton} style={{ backgroundColor: 'transparent' }} />
+      <Text style={styles.headerTitle} numberOfLines={1}>{currentProductName}</Text>
+      <View style={[styles.backButton, { backgroundColor: 'transparent' }]} />
     </View>
   );
 
   const getTemperatureDescription = (temp) => {
-    if (temp === 'hot') return 'يستخدم للمنتجات الساخنة';
-    if (temp === 'cold') return 'يستخدم للمنتجات الباردة';
-    if (temp === 'both') return 'يستخدم للمنتجات الساخنة والباردة معاً';
-    return 'غير محدد';
+    if (temp === 'hot') return t('hotDescription');
+    if (temp === 'cold') return t('coldDescription');
+    if (temp === 'both') return t('bothDescription');
+    return t('notSpecified');
   };
 
   const getTemperatureTitle = (temp) => {
-    if (temp === 'hot') return 'ساخن';
-    if (temp === 'cold') return 'بارد';
-    if (temp === 'both') return 'ساخن وبارد';
-    return 'غير محدد';
+    if (temp === 'hot') return t('hot');
+    if (temp === 'cold') return t('cold');
+    if (temp === 'both') return t('hotAndCold');
+    return t('notSpecified');
   };
 
   if (isLoading) return <View style={styles.loadingCenter}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
-  if (!product) return <View style={styles.loadingCenter}><Text>بيانات غير متاحة</Text></View>;
+  if (!product) return <View style={styles.loadingCenter}><Text>{t('dataNotAvailable')}</Text></View>;
 
   const SCREEN_WIDTH = Dimensions.get('window').width;
   
@@ -104,45 +109,84 @@ export default function ProductDetailScreen({ route, navigation }) {
           onImagePress={(url, index) => setFullscreenIndex(index)}
         />
         
-        <View style={styles.contentContainer}>
-          <Text style={styles.mainTitle}>{product.name}</Text>
+        <View style={[
+          styles.contentContainer, 
+          { 
+            alignItems: isRTL ? 'flex-start' : 'flex-end',
+          }
+        ]}>
+          <Text style={[
+            styles.mainTitle, 
+            { 
+              textAlign: isRTL ? 'right' : 'left', 
+              writingDirection: isRTL ? 'rtl' : 'ltr',
+              alignSelf: isRTL ? 'flex-start' : 'flex-end', 
+              width: '100%' 
+            }
+          ]}>
+            {getProductField(product, 'name', 'name_en')}
+          </Text>
           
-          <View style={styles.sectionBlock}>
-            <Text style={styles.blockTitle}>المقاس</Text>
-            <Text style={styles.blockValue}>{product.size || 'غير محدد'}</Text>
+          <View style={[styles.sectionBlock, { alignItems: isRTL ? 'flex-start' : 'flex-end', width: '100%' }]}>
+            <Text style={[styles.blockTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {t('size')}
+            </Text>
+            <Text style={[styles.blockValue, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {translateSize(product.size) || t('notSpecified')}
+            </Text>
           </View>
 
-          <View style={styles.sectionBlock}>
-            <Text style={styles.blockTitle}>درجة الاستخدام ({getTemperatureTitle(product.temp)})</Text>
-            <Text style={styles.blockValue}>{getTemperatureDescription(product.temp)}</Text>
+          <View style={[styles.sectionBlock, { alignItems: isRTL ? 'flex-start' : 'flex-end', width: '100%' }]}>
+            <Text style={[styles.blockTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {t('temperature')} ({getTemperatureTitle(product.temp)})
+            </Text>
+            <Text style={[styles.blockValue, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {getTemperatureDescription(product.temp)}
+            </Text>
           </View>
 
-          <View style={styles.sectionBlock}>
-            <Text style={styles.blockTitle}>كود المنتج</Text>
-            <Text style={styles.blockValue}>{product.code}</Text>
+          <View style={[styles.sectionBlock, { alignItems: isRTL ? 'flex-start' : 'flex-end', width: '100%' }]}>
+            <Text style={[styles.blockTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {t('productCode')}
+            </Text>
+            <Text style={[styles.blockValue, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {product.code}
+            </Text>
           </View>
 
-          <View style={styles.sectionBlock}>
-            <Text style={styles.blockTitle}>فئة الخامة</Text>
-            <Text style={styles.blockValue}>{product.material_category || 'غير محدد'}</Text>
+          <View style={[styles.sectionBlock, { alignItems: isRTL ? 'flex-start' : 'flex-end', width: '100%' }]}>
+            <Text style={[styles.blockTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {t('materialCategory')}
+            </Text>
+            <Text style={[styles.blockValue, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {translateMaterial(product.material_category) || t('notSpecified')}
+            </Text>
           </View>
 
-          <View style={styles.sectionBlock}>
-            <Text style={styles.blockTitle}>خامة تفصيلية</Text>
-            <Text style={styles.blockValue}>{product.material_name || 'غير محدد'}</Text>
+          <View style={[styles.sectionBlock, { alignItems: isRTL ? 'flex-start' : 'flex-end', width: '100%' }]}>
+            <Text style={[styles.blockTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {t('materialDetail')}
+            </Text>
+            <Text style={[styles.blockValue, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {translateMaterial(product.material_name) || t('notSpecified')}
+            </Text>
           </View>
 
           {product.notes && (
-            <View style={styles.sectionBlock}>
-              <Text style={styles.blockTitle}>ملاحظات</Text>
-              <Text style={styles.blockValue}>{product.notes}</Text>
+            <View style={[styles.sectionBlock, { alignItems: isRTL ? 'flex-start' : 'flex-end', width: '100%' }]}>
+              <Text style={[styles.blockTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+                {t('notes')}
+              </Text>
+              <Text style={[styles.blockValue, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+                {product.notes}
+              </Text>
             </View>
           )}
         </View>
 
         {lids.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>الأغطية المتوافقة</Text>
+            <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('compatibleLids')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
               {lids.map(item => (
                 <View key={item.id} style={styles.horizontalCard}>
@@ -155,7 +199,7 @@ export default function ProductDetailScreen({ route, navigation }) {
 
         {siblings.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>مقاسات أخرى</Text>
+            <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('otherSizes')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
               {siblings.map(item => (
                 <View key={item.id} style={styles.horizontalCard}>
@@ -245,7 +289,6 @@ const styles = StyleSheet.create({
     fontSize: 26, 
     fontWeight: '800', 
     color: COLORS.text, 
-    textAlign: 'right', 
     marginBottom: SPACING.xl, 
     lineHeight: 34
   },
@@ -259,7 +302,6 @@ const styles = StyleSheet.create({
   blockTitle: { 
     fontSize: FONT_SIZES.sm, 
     color: COLORS.textSecondary, 
-    textAlign: 'right', 
     marginBottom: 6, 
     fontWeight: '500'
   },
@@ -267,7 +309,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md, 
     color: COLORS.text, 
     fontWeight: '700', 
-    textAlign: 'right' 
   },
   
   section: { 
