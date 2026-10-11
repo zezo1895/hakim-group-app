@@ -6,6 +6,7 @@ import { View, Text, Pressable, I18nManager, Alert, Linking } from 'react-native
 import * as SplashScreen from 'expo-splash-screen';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as IntentLauncher from 'expo-intent-launcher';
+import * as KeepAwake from 'expo-keep-awake';
 import Constants from 'expo-constants';
 
 import HomeScreen from './src/screens/HomeScreen';
@@ -46,12 +47,26 @@ export default function App() {
   const [syncProgress, setSyncProgress] = useState({ progress: 0, message: '', stage: 'data' });
   const [updateRequired, setUpdateRequired] = useState(false);
   const [updateUrl, setUpdateUrl] = useState('');
+  const [latestVersion, setLatestVersion] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+
+  const safeKeepAwake = async (enable, tag = 'hakim-screen') => {
+    try {
+      if (enable) {
+        await KeepAwake.activateKeepAwakeAsync(tag);
+      } else {
+        KeepAwake.deactivateKeepAwake(tag);
+      }
+    } catch (e) {
+      console.log('KeepAwake error:', e);
+    }
+  };
 
   const handleDownloadAndInstall = async () => {
     try {
       setIsDownloading(true);
+      await safeKeepAwake(true, 'apk-download');
 
       let finalUrl = updateUrl;
       
@@ -84,8 +99,6 @@ export default function App() {
         type: 'application/vnd.android.package-archive',
       });
       
-      setIsDownloading(false);
-      
     } catch (error) {
       console.log('Download error:', error);
       
@@ -108,7 +121,9 @@ export default function App() {
         'سبب منع التثبيت الداخلي', 
         `الأندرويد منع التثبيت الداخلي والسبب التقني هو:\n\n${error.message || String(error)}\n\n(تم تحويلك للمتصفح كبديل مؤقت)`
       );
+    } finally {
       setIsDownloading(false);
+      safeKeepAwake(false, 'apk-download');
     }
   };
 
@@ -136,6 +151,7 @@ export default function App() {
           const currentNativeVersion = Constants.expoConfig?.version || '1.0.0';
           
           if (versionData && versionData.latestVersion && versionData.latestVersion !== currentNativeVersion) {
+            setLatestVersion(versionData.latestVersion);
             setUpdateUrl(versionData.downloadUrl);
             setUpdateRequired(true);
             try { await SplashScreen.hideAsync(); } catch (e) {}
@@ -153,18 +169,23 @@ export default function App() {
       
       if (needsSync) {
         setIsSyncing(true);
+        await safeKeepAwake(true, 'initial-sync');
         try {
           await SplashScreen.hideAsync();
         } catch (e) {}
         
-        await syncService.fullSync(({ stage, current, total, message }) => {
-          setSyncProgress({
-            progress: total > 0 ? current / total : 0,
-            message,
-            stage,
+        try {
+          await syncService.fullSync(({ stage, current, total, message }) => {
+            setSyncProgress({
+              progress: total > 0 ? current / total : 0,
+              message,
+              stage,
+            });
           });
-        });
-        setIsSyncing(false);
+        } finally {
+          setIsSyncing(false);
+          safeKeepAwake(false, 'initial-sync');
+        }
       } else {
         // Run intelligent background check if not initial sync!
         // We do not await this, it runs silently in the background
@@ -224,9 +245,16 @@ export default function App() {
           >
             <Text style={{ fontSize: 40 }}>🚀</Text>
           </Pressable>
-          <Text style={{ fontSize: FONT_SIZES.title, fontWeight: 'bold', color: COLORS.primary, marginBottom: SPACING.md, textAlign: 'center' }}>تحديث إجباري</Text>
+          <Text style={{ fontSize: FONT_SIZES.title, fontWeight: 'bold', color: COLORS.primary, marginBottom: SPACING.xs, textAlign: 'center' }}>تحديث إجباري</Text>
+          {latestVersion ? (
+            <View style={{ backgroundColor: '#E8F5E9', paddingHorizontal: 16, paddingVertical: 6, borderRadius: RADIUS.full, marginBottom: SPACING.md, borderWidth: 1, borderColor: '#C8E6C9' }}>
+              <Text style={{ color: '#2E7D32', fontWeight: 'bold', fontSize: FONT_SIZES.sm }}>
+                الإصدار الجديد: {latestVersion}
+              </Text>
+            </View>
+          ) : null}
           <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: SPACING.xxl, textAlign: 'center', lineHeight: 24 }}>
-            تم إطلاق نسخة جديدة من التطبيق. يرجى التحديث الآن لضمان عمل التطبيق بأفضل شكل واستمرار مزامنة البيانات.
+            تم إطلاق نسخة جديدة {latestVersion ? `(${latestVersion}) ` : ''}من التطبيق. يرجى التحديث الآن لضمان عمل التطبيق بأفضل شكل واستمرار مزامنة البيانات.
           </Text>
           <View style={{ width: '100%', overflow: 'hidden', borderRadius: RADIUS.md }}>
             {isDownloading ? (

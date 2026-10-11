@@ -3,27 +3,10 @@ import { storage } from './storage';
 import { imageCache } from './imageCache';
 
 export const syncService = {
-  // Check if we need initial sync (no local data or incomplete image downloads)
+  // Check if we need initial sync (only if NO local products exist at all)
   needsInitialSync: async () => {
     const products = await storage.getProducts();
     if (!products || products.length === 0) return true;
-    
-    // Check if images are completely downloaded
-    const imageMap = (await storage.getImageMap()) || {};
-    let isMissingImages = false;
-    
-    // Check up to a reasonable limit to not block thread too long, 
-    // but typically we can check all of them instantly
-    for (const p of products) {
-      if (p.images && p.images.length > 0) {
-        for (const img of p.images) {
-          if (img.url && !imageMap[img.url]) {
-             return true; // Found a missing image! Force sync screen.
-          }
-        }
-      }
-    }
-    
     return false;
   },
   
